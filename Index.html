@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=480">
+<title>SynergyMSO Care Command</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green: #1a7a4a; --green-light: #e8f5ee;
+    --red: #c0392b; --red-light: #fdecea;
+    --yellow: #d4820a; --yellow-light: #fef6e4;
+    --blue: #1a4f8a; --blue-light: #e8f0fa;
+    --purple: #6a1a8a; --purple-light: #f3eafa;
+    --orange: #e65c00; --orange-light: #fff0e6;
+    --teal: #007a7a; --teal-light: #e0f5f5;
+    --gray: #4a4a4a; --light: #f4f6f9;
+    --border: #dde3ec; --shadow: 0 2px 12px rgba(0,0,0,0.10);
+  }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light); color: var(--gray); width: 480px; min-height: 100vh; margin: 0 auto; }
+  .app-header { background: var(--blue); color: white; padding: 14px 20px 10px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); }
+  .app-header h1 { font-size: 15px; font-weight: 700; }
+  .app-header .sub { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+  .progress-wrap { background: rgba(255,255,255,0.2); height: 4px; border-radius: 2px; margin-top: 10px; }
+  .progress-bar { background: #7ec8a0; height: 4px; border-radius: 2px; transition: width 0.3s ease; }
+  .step-nav { display: flex; gap: 4px; padding: 8px 20px; background: rgba(0,0,0,0.15); flex-wrap: wrap; }
+  .step-dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.4); color: rgba(255,255,255,0.7); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
+  .step-dot:hover { background: rgba(255,255,255,0.2); border-color: white; color: white; }
+  .step-dot.active { background: white; color: var(--blue); border-color: white; }
+  .step-dot.done { background: rgba(126,200,160,0.5); border-color: #7ec8a0; color: white; }
+  .step-content { padding: 16px 20px 100px; }
+  .home { padding: 24px 20px; }
+  .home h2 { font-size: 18px; color: var(--blue); margin-bottom: 6px; }
+  .home p { font-size: 13px; color: #666; margin-bottom: 24px; }
+  .mode-card { background: white; border: 2px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; cursor: pointer; transition: all 0.18s; display: flex; align-items: center; gap: 16px; }
+  .mode-card:hover { border-color: var(--blue); box-shadow: var(--shadow); transform: translateY(-1px); }
+  .mode-card .icon { font-size: 28px; min-width: 36px; text-align: center; }
+  .mode-card .label { font-size: 15px; font-weight: 700; color: var(--blue); }
+  .mode-card .desc { font-size: 12px; color: #777; margin-top: 3px; }
+  .mode-card.enroll { border-left: 5px solid var(--green); }
+  .mode-card.monthly { border-left: 5px solid var(--blue); }
+  .mode-card.disenroll { border-left: 5px solid var(--red); }
+  .mode-card.faq { border-left: 5px solid var(--orange); }
+  .mode-card.metrics { border-left: 5px solid var(--teal); }
+  .step-screen { display: none; }
+  .step-screen.active { display: block; }
+  .step-badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; margin-bottom: 10px; }
+  .badge-enroll { background: var(--green-light); color: var(--green); }
+  .badge-monthly { background: var(--blue-light); color: var(--blue); }
+  .badge-disenroll { background: var(--red-light); color: var(--red); }
+  .badge-quiz { background: var(--purple-light); color: var(--purple); }
+  .badge-faq { background: var(--orange-light); color: var(--orange); }
+  .badge-metrics { background: var(--teal-light); color: var(--teal); }
+  .step-title { font-size: 17px; font-weight: 700; color: #1a1a2e; margin-bottom: 12px; line-height: 1.3; }
+  .stop-box { background: var(--red-light); border: 2px solid var(--red); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+  .stop-box .stop-label { font-size: 11px; font-weight: 800; color: var(--red); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+  .stop-box p { font-size: 13px; color: #7a1a1a; }
+  .stop-box ul { margin-left: 16px; }
+  .stop-box li { font-size: 13px; color: var(--red); font-weight: 600; margin-bottom: 4px; }
+  .warn-box { background: var(--yellow-light); border: 2px solid #e6a020; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+  .warn-box .warn-label { font-size: 11px; font-weight: 800; color: var(--yellow); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+  .warn-box p, .warn-box li { font-size: 13px; color: #7a4a00; }
+  .warn-box ul { margin-left: 16px; }
+  .warn-box li { margin-bottom: 3px; }
+  .info-box { background: var(--blue-light); border-left: 4px solid var(--blue); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+  .info-box p, .info-box li { font-size: 13px; color: #1a2a4a; }
+  .info-box ul { margin-left: 16px; }
+  .info-box li { margin-bottom: 4px; }
+  .script-box { background: #f0f7f0; border: 1.5px solid #a8d5b5; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+  .script-box .script-label { font-size: 10px; font-weight: 800; color: var(--green); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+  .script-box p { font-size: 13.5px; color: #1a3a2a; line-height: 1.6; font-style: italic; }
+  .script-box .script-note { font-size: 11px; color: #4a7a5a; margin-top: 8px; font-style: normal; font-weight: 600; }
+  .checklist { margin-bottom: 16px; }
+  .check-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; background: white; border: 1.5px solid var(--border); border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; }
+  .check-item:hover { border-color: var(--green); }
+  .check-item.checked { background: var(--green-light); border-color: var(--green); }
+  .check-item .cb { width: 20px; height: 20px; border: 2px solid #aaa; border-radius: 5px; min-width: 20px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .check-item.checked .cb { background: var(--green); border-color: var(--green); color: white; }
+  .check-item .cb-label { font-size: 13px; color: var(--gray); line-height: 1.4; }
+  .check-item.checked .cb-label { color: var(--green); font-weight: 600; }
+  .ecw-box { background: #fff8e1; border: 1.5px solid #f0c040; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+  .ecw-box .ecw-label { font-size: 10px; font-weight: 800; color: #b07d00; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+  .ecw-step { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .ecw-num { background: #f0c040; color: #5a3e00; font-size: 11px; font-weight: 800; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; min-width: 22px; }
+  .ecw-step p { font-size: 13px; color: #5a3e00; line-height: 1.4; }
+  .escalate-box { background: #fff0f0; border: 2px solid #e57373; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+  .escalate-box .esc-label { font-size: 10px; font-weight: 800; color: var(--red); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+  .esc-row { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #fcc; }
+  .esc-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .esc-trigger { font-size: 12px; font-weight: 700; color: var(--red); margin-bottom: 3px; }
+  .esc-action { font-size: 12px; color: #4a1a1a; }
+  .esc-action span { font-weight: 700; }
+  .doc-box { background: #f0f4ff; border: 1.5px solid #7090d0; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+  .doc-box .doc-label { font-size: 10px; font-weight: 800; color: #2a4a9a; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+  .doc-line { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; }
+  .doc-num { background: #7090d0; color: white; font-size: 11px; font-weight: 800; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; min-width: 20px; }
+  .doc-line p { font-size: 13px; color: #1a2a6a; line-height: 1.5; }
+  .quiz-box { background: var(--purple-light); border: 2px solid #9a4ab0; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .quiz-q { font-size: 14px; font-weight: 700; color: #3a0a5a; margin-bottom: 14px; line-height: 1.5; font-style: italic; }
+  .quiz-btn-row { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-btn { padding: 12px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; text-align: left; transition: all 0.15s; }
+  .quiz-btn.urgent { background: #fdecea; border: 2px solid var(--red); color: var(--red); }
+  .quiz-btn.urgent:hover { background: var(--red); color: white; }
+  .quiz-btn.concern { background: var(--yellow-light); border: 2px solid var(--yellow); color: var(--yellow); }
+  .quiz-btn.concern:hover { background: var(--yellow); color: white; }
+  .quiz-btn.ok { background: var(--green-light); border: 2px solid var(--green); color: var(--green); }
+  .quiz-btn.ok:hover { background: var(--green); color: white; }
+  .quiz-result { padding: 12px 14px; border-radius: 8px; margin-top: 12px; font-size: 13px; font-weight: 600; line-height: 1.5; }
+  .quiz-result.urgent { background: var(--red-light); color: var(--red); border: 1.5px solid var(--red); }
+  .quiz-result.concern { background: var(--yellow-light); color: #7a4a00; border: 1.5px solid var(--yellow); }
+  .quiz-result.ok { background: var(--green-light); color: var(--green); border: 1.5px solid var(--green); }
+  .topic-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .topic-btn { background: white; border: 2px solid var(--border); border-radius: 10px; padding: 12px 16px; cursor: pointer; text-align: left; transition: all 0.15s; display: flex; align-items: center; gap: 12px; }
+  .topic-btn:hover { border-color: var(--purple); background: var(--purple-light); }
+  .topic-btn .t-icon { font-size: 20px; min-width: 24px; }
+  .topic-btn .t-name { font-size: 13px; font-weight: 700; color: var(--gray); }
+  .timer-box { background: white; border: 2px solid var(--blue); border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 16px; }
+  .timer-display { font-size: 36px; font-weight: 800; color: var(--blue); font-variant-numeric: tabular-nums; }
+  .timer-label { font-size: 12px; color: #888; margin-top: 4px; }
+  .timer-goal { font-size: 12px; font-weight: 700; margin-top: 6px; }
+  .timer-controls { display: flex; gap: 8px; margin-top: 12px; }
+  .timer-controls .btn { font-size: 12px; padding: 10px; }
+  .summary-box { background: white; border: 2px solid var(--green); border-radius: 12px; padding: 18px; margin-bottom: 16px; text-align: center; }
+  .summary-box .check-big { font-size: 48px; margin-bottom: 8px; }
+  .summary-box h3 { font-size: 16px; color: var(--green); font-weight: 800; margin-bottom: 8px; }
+  .summary-box p { font-size: 13px; color: #555; }
+  .btn { flex: 1; padding: 14px 12px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.18s; min-width: 80px; }
+  .btn:active { transform: scale(0.97); }
+  .btn-yes { background: var(--green); color: white; }
+  .btn-yes:hover { background: #145e38; }
+  .btn-no { background: #e0e0e0; color: #333; }
+  .btn-no:hover { background: #ccc; }
+  .btn-next { background: var(--blue); color: white; }
+  .btn-next:hover { background: #133a6a; }
+  .btn-stop { background: var(--red); color: white; }
+  .btn-stop:hover { background: #9b2c20; }
+  .btn-warn { background: var(--yellow); color: white; }
+  .btn-warn:hover { background: #b36d08; }
+  .btn-back { background: #6c757d; color: white; font-size: 13px; }
+  .btn-back:hover { background: #545b62; }
+  .btn-home { background: #3a3a3a; color: white; font-size: 13px; }
+  .btn-home:hover { background: #222; }
+  .btn-print { background: var(--purple); color: white; }
+  .btn-print:hover { background: #4a0a6a; }
+  .btn-email { background: var(--teal); color: white; }
+  .btn-email:hover { background: #005a5a; }
+  .btn-full { width: 100%; flex: none; }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+  .branch-q { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 14px; line-height: 1.4; padding: 14px 16px; background: white; border-radius: 10px; border: 1.5px solid var(--border); }
+  .section-label { font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #aaa; margin-bottom: 12px; margin-top: 4px; }
+  .footer-nav { position: fixed; bottom: 0; width: 480px; background: white; border-top: 1px solid var(--border); padding: 12px 20px; display: flex; gap: 8px; z-index: 99; }
+  .field-tag { display: inline-block; background: #fff3cd; border: 1px solid #f0c040; border-radius: 4px; padding: 1px 7px; font-size: 12px; font-weight: 700; color: #7a5000; margin: 2px; }
+  .required-tag { display: inline-block; background: #fdecea; border: 1px solid var(--red); border-radius: 4px; padding: 1px 7px; font-size: 11px; font-weight: 700; color: var(--red); margin-left: 4px; }
+  .attest-box { background: #f8f8ff; border: 2px solid #9a4ab0; border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .attest-box .attest-label { font-size: 10px; font-weight: 800; color: var(--purple); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; }
+  .attest-box p { font-size: 12px; color: #3a0a5a; line-height: 1.6; font-style: italic; margin-bottom: 12px; }
+  .notes-field { width: 100%; min-height: 70px; border: 1.5px solid var(--border); border-radius: 8px; padding: 10px; font-size: 13px; font-family: 'Segoe UI', Arial, sans-serif; resize: vertical; background: white; margin-top: 6px; }
+  .notes-field:focus { outline: none; border-color: var(--blue); }
+  .prisma-box { background: #e8f4fd; border: 2px solid #2196F3; border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+  .prisma-box .prisma-label { font-size: 10px; font-weight: 800; color: #1565C0; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+  .prisma-box li { font-size: 13px; color: #1a3a5a; margin-bottom: 4px; }
+  .prisma-box ul { margin-left: 16px; }
+  .faq-search { width: 100%; padding: 12px 16px; border: 2px solid var(--border); border-radius: 10px; font-size: 14px; margin-bottom: 16px; outline: none; }
+  .faq-search:focus { border-color: var(--orange); }
+  .faq-category { margin-bottom: 16px; }
+  .faq-cat-header { background: var(--orange); color: white; padding: 10px 14px; border-radius: 8px 8px 0 0; font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+  .faq-cat-body { border: 1.5px solid var(--orange); border-top: none; border-radius: 0 0 8px 8px; overflow: hidden; }
+  .faq-item { padding: 12px 14px; border-bottom: 1px solid #ffe0cc; cursor: pointer; transition: background 0.15s; }
+  .faq-item:last-child { border-bottom: none; }
+  .faq-item:hover { background: var(--orange-light); }
+  .faq-q { font-size: 13px; font-weight: 700; color: #3a1a00; }
+  .faq-a { font-size: 12px; color: #5a3a00; line-height: 1.6; margin-top: 8px; display: none; background: #fff8f4; padding: 10px; border-radius: 6px; }
+  .faq-item.open .faq-a { display: block; }
+  .faq-item.open .faq-q { color: var(--orange); }
+  .metric-card { background: white; border: 2px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .metric-card .m-label { font-size: 10px; font-weight: 800; color: #888; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+  .metric-card .m-value { font-size: 32px; font-weight: 800; color: var(--teal); }
+  .metric-card .m-sub { font-size: 11px; color: #888; margin-top: 4px; }
+  .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .metric-grid .metric-card { margin-bottom: 0; }
+  .history-item { background: white; border: 1.5px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+  .history-month { font-size: 13px; font-weight: 800; color: var(--teal); margin-bottom: 6px; }
+  .history-row { display: flex; justify-content: space-between; font-size: 12px; color: #555; padding: 3px 0; border-bottom: 1px solid #f0f0f0; }
+  .history-row:last-child { border-bottom: none; }
+  .radio-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .radio-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: white; border: 1.5px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+  .radio-item:hover { border-color: var(--blue); }
+  .radio-item.selected { background: var(--blue-light); border-color: var(--blue); }
+  .radio-item label { font-size: 13px; color: var(--gray); cursor: pointer; line-height: 1.4; }
+  .specialist-fields { background: var(--yellow-light); border: 1.5px solid #f0c040; border-radius: 8px; padding: 14px; margin-bottom: 16px; }
+  .specialist-fields label { font-size: 11px; font-weight: 700; color: #b07d00; display: block; margin-bottom: 4px; margin-top: 10px; }
+  .specialist-fields label:first-child { margin-top: 0; }
+  .specialist-fields input { width: 100%; border: 1.5px solid #f0c040; border-radius: 6px; padding: 8px 10px; font-size: 13px; background: white; outline: none; }
+  .completed-topics-bar { background: var(--purple-light); border: 1.5px solid #9a4ab0; border-radius: 8px; padding: 10px 14px; margin-bottom: 12px; }
+  .completed-topics-bar .ct-label { font-size: 10px; font-weight: 800; color: var(--purple); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+  .ct-chip { display: inline-block; background: white; border: 1px solid #9a4ab0; border-radius: 20px; padding: 3px 10px; font-size: 11px; color: var(--purple); font-weight: 700; margin: 2px; }
+  .copyright-footer { text-align: center; padding: 12px; font-size: 10px; color: #aaa; border-top: 1px solid var(--border); margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="screen-home">
+  <div class="app-header">
+    <h1>🏥 SynergyMSO Care Command</h1>
+    <div class="sub">Kokoro Health &amp; Wellness · HVA Workflow Guide</div>
+  </div>
+  <div class="home">
+    <h2>Select Workflow</h2>
+    <p>Choose the workflow that matches your current task.</p>
+    <div class="mode-card enroll" onclick="startMode('enroll')"><div class="icon">📋</div><div><div class="label">Enrollment</div><div class="desc">New patient → Consent → eCW setup</div></div></div>
+    <div class="mode-card monthly" onclick="startMode('monthly')"><div class="icon">📞</div><div><div class="label">Monthly CCM Call</div><div class="desc">Check-in → MedRec → Questionnaire → Documentation</div></div></div>
+    <div class="mode-card disenroll" onclick="startMode('disenroll')"><div class="icon">🛑</div><div><div class="label">Disenrollment</div><div class="desc">Stop CCM correctly → eCW → Billing</div></div></div>
+    <div class="mode-card faq" onclick="showScreen('screen-faq')"><div class="icon">❓</div><div><div class="label">FAQ / Knowledge Base</div><div class="desc">Billing · Workflows · eCW · Compliance · Patient Q&amp;A</div></div></div>
+    <div class="mode-card metrics" onclick="showScreen('screen-metrics')"><div class="icon">📊</div><div><div class="label">Metrics Dashboard</div><div class="desc">Monthly performance tracker · Reports · History</div></div></div>
+    <div style="margin-top:16px;padding:16px;background:white;border-radius:10px;border:1.5px solid var(--border);">
+      <div class="section-label">Quick Reference</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-warn" style="font-size:12px;padding:8px 14px;flex:none;" onclick="showRef('escalation')">⚡ Escalation</button>
+        <button class="btn btn-next" style="font-size:12px;padding:8px 14px;flex:none;" onclick="showRef('billable')">💰 Billable</button>
+        <button class="btn btn-back" style="font-size:12px;padding:8px 14px;flex:none;" onclick="showRef('medrec')">💊 MedRec</button>
+      </div>
+    </div>
+    <div class="copyright-footer">© 2025 SynergyMSO · Care Command · All rights reserved · Proprietary software – unauthorized copying or distribution is prohibited.</div>
+  </div>
+</div>
+
+<!-- QUICK REF -->
+<div id="screen-ref" class="step-screen">
+  <div class="app-header"><h1 id="ref-title">Quick Reference</h1><div class="sub">SynergyMSO Care Command</div></div>
+  <div class="step-content"><div id="ref-content"></div></div>
+  <div class="footer-nav"><button class="btn btn-home btn-full" onclick="goHome()">← Back to Home</button></div>
+</div>
+
+<!-- FAQ -->
+<div id="screen-faq" class="step-screen">
+  <div class="app-header"><h1>❓ FAQ / Knowledge Base</h1><div class="sub">CCM Reference Guide · SynergyMSO Care Command</div></div>
+  <div class="step-content">
+    <span class="step-badge badge-faq">Knowledge Base</span>
+    <div class="step-title">Find Your Answer</div>
+    <input class="faq-search" type="text" placeholder="🔍 Search questions..." oninput="searchFAQ(this.value)" id="faq-search-input">
+    <div id="faq-body"></div>
+  </div>
+  <div class="footer-nav"><button class="btn btn-home btn-full" onclick="goHome()">← Back to Home</button></div>
+</div>
+
+<!-- METRICS -->
+<div id="screen-metrics" class="step-screen">
+  <div class="app-header"><h1>📊 Metrics Dashboard</h1><div class="sub" id="metrics-month-label">Loading...</div></div>
+  <div class="step-content" id="metrics-content"></div>
+  <div class="footer-nav" id="metrics-footer"></div>
+</div>
+
+<!-- ENROLLMENT -->
+<div id="screen-enroll" class="step-screen">
+  <div class="app-header">
+    <h1>📋 Enrollment Workflow</h1>
+    <div class="sub" id="enroll-sub">Step 1 of 9</div>
+    <div class="progress-wrap"><div class="progress-bar" id="enroll-progress" style="width:11%"></div></div>
+    <div class="step-nav" id="enroll-nav"></div>
+  </div>
+  <div class="step-content" id="enroll-content"></div>
+  <div class="footer-nav" id="enroll-footer"></div>
+</div>
+
+<!-- MONTHLY -->
+<div id="screen-monthly" class="step-screen">
+  <div class="app-header">
+    <h1>📞 Monthly CCM Call</h1>
+    <div class="sub" id="monthly-sub">Step 1 of 11</div>
+    <div class="progress-wrap"><div class="progress-bar" id="monthly-progress" style="width:9%"></div></div>
+    <div class="step-nav" id="monthly-nav"></div>
+  </div>
+  <div class="step-content" id="monthly-content"></div>
+  <div class="footer-nav" id="monthly-footer"></div>
+</div>
+
+<!-- DISENROLLMENT -->
+<div id="screen-disenroll" class="step-screen">
+  <div class="app-header">
+    <h1>🛑 Disenrollment</h1>
+    <div class="sub" id="disenroll-sub">Step 1 of 5</div>
+    <div class="progress-wrap"><div class="progress-bar" id="disenroll-progress" style="width:20%"></div></div>
+    <div class="step-nav" id="disenroll-nav"></div>
+  </div>
+  <div class="step-content" id="disenroll-content"></div>
+  <div class="footer-nav" id="disenroll-footer"></div>
+</div>
+
+<!-- QUESTIONNAIRE -->
+<div id="screen-quiz" class="step-screen">
+  <div class="app-header">
+    <h1 id="quiz-header-title">📋 Health Questionnaire</h1>
+    <div class="sub" id="quiz-sub">Question 1 of 4</div>
+    <div class="progress-wrap"><div class="progress-bar" id="quiz-progress" style="width:25%"></div></div>
+  </div>
+  <div class="step-content" id="quiz-content"></div>
+  <div class="footer-nav" id="quiz-footer"></div>
+</div>
+
+<script>
+// ═══ STATE ═══
+var timerInterval=null,timerSeconds=0,timerRunning=false,timerStarted=false;
+var finalTimerDisplay='00:00';
+var enrollStep=0,enrollBranch={};
+var monthlyStep=0,monthlyBranch={},monthlyStepHistory=[];
+var selectedTopic=null,completedTopics=[],allQuizSessions=[];
+var disenrollStep=0,quizStep=0;
+var pdfData={callDate:'',hvaName:'',timerDisplay:'00:00',timerMet:false,prismaReviewed:false,medrecStatus:'',medrecNotes:'',escalations:[],quizSessions:[],educationSent:'',educationFile:'',refillChoice:'',closingNotes:'',newSpecialist:false,specialistName:'',specialistSpecialty:'',specialistPhone:'',patientReached:false,goodTime:false};
+
+// ═══ METRICS ═══
+function getMonthKey(){var n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');}
+function getMonthLabel(){return new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'});}
+function loadMetrics(){var k='ccm_metrics_'+getMonthKey(),s=localStorage.getItem(k);if(s)return JSON.parse(s);return{month:getMonthKey(),monthLabel:getMonthLabel(),callsCompleted:0,callsNoAnswer:0,callsCallback:0,totalCallSeconds:0,medrecComplete:0,medrecIncomplete:0,escalationsCount:0,escalationsList:[],educationSent:0,topicsUsed:{},enrollments:0,disenrollments:0};}
+function saveMetrics(m){localStorage.setItem('ccm_metrics_'+m.month,JSON.stringify(m));}
+function loadHistory(){var s=localStorage.getItem('ccm_metrics_history');return s?JSON.parse(s):[];}
+function saveHistory(h){localStorage.setItem('ccm_metrics_history',JSON.stringify(h));}
+function recordCallComplete(secs,medSt,escs,topics,eduSent){var m=loadMetrics();m.callsCompleted++;m.totalCallSeconds+=secs||0;if(medSt==='complete')m.medrecComplete++;else m.medrecIncomplete++;if(escs&&escs.length>0){m.escalationsCount+=escs.length;m.escalationsList=m.escalationsList.concat(escs);}if(eduSent)m.educationSent++;if(topics){for(var i=0;i<topics.length;i++)m.topicsUsed[topics[i]]=(m.topicsUsed[topics[i]]||0)+1;}saveMetrics(m);}
+function recordNoAnswer(){var m=loadMetrics();m.callsNoAnswer++;saveMetrics(m);}
+function recordCallback(){var m=loadMetrics();m.callsCallback++;saveMetrics(m);}
+function recordEnrollment(){var m=loadMetrics();m.enrollments++;saveMetrics(m);}
+function recordDisenrollment(){var m=loadMetrics();m.disenrollments++;saveMetrics(m);}
+function archiveAndResetMetrics(){var m=loadMetrics(),h=loadHistory();h.unshift(m);if(h.length>12)h.pop();saveHistory(h);localStorage.removeItem('ccm_metrics_'+m.month);}
+
+// ═══ NAVIGATION ═══
+function showScreen(id){
+  ['screen-home','screen-ref','screen-enroll','screen-monthly','screen-disenroll','screen-quiz','screen-faq','screen-metrics'].forEach(function(s){var e=document.getElementById(s);if(e){e.style.display='none';e.classList.remove('active');}});
+  var el=document.getElementById(id);if(el){el.style.display='block';el.classList.add('active');}
+  if(id==='screen-faq')renderFAQ();
+  if(id==='screen-metrics')renderMetrics();
+}
+function goHome(){stopTimer();showScreen('screen-home');}
+function getTodayStr(){return new Date().toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'});}
+function startMode(mode){
+  if(mode==='enroll'){enrollStep=0;enrollBranch={};pdfData.callDate=getTodayStr();pdfData.escalations=[];renderEnroll();showScreen('screen-enroll');}
+  if(mode==='monthly'){
+    monthlyStep=0;monthlyBranch={};monthlyStepHistory=[];selectedTopic=null;completedTopics=[];allQuizSessions=[];
+    timerSeconds=0;timerRunning=false;timerStarted=false;finalTimerDisplay='00:00';
+    pdfData={callDate:getTodayStr(),hvaName:'',timerDisplay:'00:00',timerMet:false,prismaReviewed:false,medrecStatus:'',medrecNotes:'',escalations:[],quizSessions:[],educationSent:'',educationFile:'',refillChoice:'',closingNotes:'',newSpecialist:false,specialistName:'',specialistSpecialty:'',specialistPhone:'',patientReached:false,goodTime:false};
+    renderMonthly();showScreen('screen-monthly');
+  }
+  if(mode==='disenroll'){disenrollStep=0;renderDisenroll();showScreen('screen-disenroll');}
+}
+function showRef(type){
+  var titles={escalation:'⚡ Escalation Rules',billable:'💰 Billable Activities',medrec:'💊 MedRec Rules'};
+  document.getElementById('ref-title').textContent=titles[type];
+  document.getElementById('ref-content').innerHTML=refContent[type];
+  showScreen('screen-ref');
+}
+
+// ═══ STEP NAVIGATOR ═══
+function renderStepNav(navId,total,current,jumpFn){
+  var nav=document.getElementById(navId);if(!nav)return;
+  var html='';
+  for(var i=0;i<total;i++){var cls=i===current?'active':(i<current?'done':'');html+='<div class="step-dot '+cls+'" onclick="'+jumpFn+'('+i+')">'+(i+1)+'</div>';}
+  nav.innerHTML=html;
+}
+function jumpEnroll(s){enrollStep=s;renderEnroll();}
+function jumpMonthly(s){monthlyStep=s;renderMonthly();setTimeout(updateTimerDisplay,50);}
+function jumpDisenroll(s){disenrollStep=s;renderDisenroll();}
+
+// ═══ QUICK REF ═══
+var refContent={
+  escalation:'<div class="escalate-box"><div class="esc-label">🚨 Escalation Rules</div><div class="esc-row"><div class="esc-trigger">Global Urgent (chest pain, severe SOB, fainting)</div><div class="esc-action">Advise 9-1-1 · Schedule appt with <span>Ashli</span></div></div><div class="esc-row"><div class="esc-trigger">Medication stopped or dose changed</div><div class="esc-action">TE → <span>Ashli</span> · Subject: Medication Issue</div></div><div class="esc-row"><div class="esc-trigger">Side effects / cannot tolerate</div><div class="esc-action">Schedule appt with <span>Ashli</span></div></div><div class="esc-row"><div class="esc-trigger">Cannot afford medication</div><div class="esc-action">TE → <span>Ashli</span> · Subject: Medication Issue</div></div><div class="esc-row"><div class="esc-trigger">ER visit or hospitalization</div><div class="esc-action">Schedule appt with <span>Ashli</span></div></div></div><div class="info-box"><p><strong>TE Rule:</strong> Reserve TEs for medication issues ONLY.</p></div>',
+  billable:'<div class="info-box"><p style="font-weight:800;margin-bottom:8px;">👉 If NOT on this list → DO NOT log minutes</p><ul><li>Monthly CCM phone call</li><li>Medication reconciliation</li><li>PRISMA / external records review</li><li>Provider communication (TEs)</li><li>Care plan updates</li><li>Sending patient education</li><li>Monthly health questionnaire</li></ul></div><div class="warn-box"><div class="warn-label">⚠️ Common Billing Errors</div><ul><li>Less than 20 minutes total</li><li>Copy-paste notes</li><li>MedRec without patient present</li><li>Wrong calendar month</li></ul></div>',
+  medrec:'<div class="stop-box"><div class="stop-label">🔴 HARD STOP</div><p>NEVER perform MedRec without patient or caregiver on the phone.</p></div><div class="stop-box" style="margin-top:8px;"><div class="stop-label">🔴 COMPLIANCE ALERT</div><p>HVAs are strictly PROHIBITED from accessing, modifying, or adding notes in the Medication/RX tab. Document MedRec in CCM Call Notes section ONLY.</p></div>'
+};
+
+// ═══ FAQ ═══
+var faqData=[
+  {cat:'💰 Billing & CPT Codes',items:[
+    {q:'What is the minimum time required to bill CCM?',a:'A minimum of 20 minutes of qualifying CCM activities must be documented per calendar month per patient.'},
+    {q:'What CPT code is used for CCM?',a:'CPT 99490 for the first 20 minutes. CPT 99439 for each additional 20-minute increment.'},
+    {q:'What activities count toward billable CCM time?',a:'Monthly CCM phone call · Medication reconciliation · PRISMA review · Provider TEs · Care plan updates · Patient education · Monthly questionnaire. If NOT on this list — DO NOT log minutes.'},
+    {q:'Can I bill CCM if the patient did not answer?',a:'No. An unsuccessful call does NOT count toward billable time.'},
+    {q:'What are the most common CCM billing errors?',a:'1. Less than 20 min · 2. Copy-paste notes · 3. MedRec without patient on phone · 4. Wrong calendar month · 5. Missing attestation.'},
+    {q:'Does the patient need to consent to CCM?',a:'Yes. Verbal consent required and documented in eCW with consent date.'}
+  ]},
+  {cat:'📋 CCM Workflows',items:[
+    {q:'What is the correct order of the monthly CCM call?',a:'1. Start timer & PRISMA review · 2. Call patient · 3. Confirm identity · 4. Good time? · 5. Recent visits & specialist check · 6. MedRec · 7. Document MedRec in CCM Call Notes · 8. Health Questionnaire · 9. Send education · 10. Closing questions · 11. Log time · 12. Final checklist & attestation.'},
+    {q:'What do I do if the patient does not answer?',a:'Document attempt in eCW: "Attempted CCM call – no answer. Left voicemail." Do NOT log call minutes.'},
+    {q:'When should I escalate to 9-1-1?',a:'Chest pain · severe shortness of breath · fainting · severe bleeding · thoughts of self-harm. Stay on line, schedule with Ashli, document.'},
+    {q:'When do I send a TE to Ashli?',a:'ONLY for medication issues. Everything else → document in CCM call and/or schedule with Ashli directly.'},
+    {q:'What is the Global Urgent Protocol?',a:'1. Advise 9-1-1 immediately · 2. Stay on call · 3. Schedule with Ashli · 4. Document · 5. Notify supervisor.'}
+  ]},
+  {cat:'🖥️ eCW How-To',items:[
+    {q:'How do I enroll a patient in CCM in eCW?',a:'Open chart → CCM Module → Enter Start Date → Click Enroll → Select Verbal consent → Enter Consent Date → Type Enrollment Notes → Select CCM radio button → Search your name → Select Care Coordinator role → Save.'},
+    {q:'How do I document MedRec in eCW?',a:'HVAs are PROHIBITED from accessing the RX/Medication tab. Document all MedRec notes in the CCM Call Notes section only. For medication issues, create a TE to Ashli — Subject: Medication Issue.'},
+    {q:'How do I log CCM time in eCW?',a:'Open CCM Module → Enter total minutes → Document activities → Confirm total monthly minutes are at least 20 before saving.'},
+    {q:'How do I send patient education through eCW?',a:'Progress Note → double-click Send → For Patients tab → Patient Education → Select materials → Add to Basket → Send to Healow Portal. File name: mm/dd/yyyy_Topic.'},
+    {q:'How do I disenroll a patient from CCM in eCW?',a:'Open chart → CCM Module → Change status to Disenrolled → Set end date to LAST DAY of current month → Create TE with reason → Close TE.'},
+    {q:'What is PRISMA?',a:'eCW external records viewer. Click PRISMA in Patient Hub → Filter to External Records → Review for hospital discharges, specialist notes, new medications, recent hospitalizations. Always review BEFORE the monthly call.'}
+  ]},
+  {cat:'⚖️ Compliance & CMS Rules',items:[
+    {q:'What are the 2 unique DX code requirements?',a:'CMS requires 2+ chronic conditions with 2 unique ICD-10 diagnosis codes in eCW. If only 1 DX code — STOP and notify Ashli.'},
+    {q:'Can I copy-paste CCM notes from last month?',a:'Absolutely NOT. CMS considers copy-paste a compliance violation and potential fraud.'},
+    {q:'What happens if we bill less than 20 minutes?',a:'Claim will be denied or recouped during audit. Only bill when 20+ minutes of qualifying CCM activities are documented.'},
+    {q:'What is the HVA attestation?',a:'The HVA declaration that all documentation is accurate and performed in real time. Legally significant for audit purposes.'}
+  ]},
+  {cat:'🗣️ Common Patient Questions',items:[
+    {q:'Patient asks: "Will I be charged for this program?"',a:'"A small cost-sharing amount may apply. If you have secondary insurance like Medicaid, that typically covers it. This support could save you significantly by helping prevent hospital visits."'},
+    {q:'Patient asks: "Who are you and why are you calling?"',a:'"I am [Your Name] calling from Kokoro Health & Wellness, the office of Dr. Nguyen and PA Ashli. I call monthly as part of your Chronic Care Management program."'},
+    {q:'Patient asks: "Can I stop this program?"',a:'"Absolutely — you have the right to stop at any time. May I ask the reason so I can document it?" Then begin the Disenrollment workflow.'},
+    {q:'Patient seems confused about CCM',a:'"Think of me as your personal health assistant who calls every month to make sure everything is going smoothly. I am here to help and make sure your doctor always knows how you are doing."'}
+  ]}
+];
+function renderFAQ(){
+  document.getElementById('faq-search-input').value='';
+  var html='';
+  faqData.forEach(function(cat,ci){
+    html+='<div class="faq-category"><div class="faq-cat-header" onclick="toggleCat('+ci+')"><span>'+cat.cat+'</span><span id="fca'+ci+'">▼</span></div><div class="faq-cat-body" id="fcb'+ci+'">';
+    cat.items.forEach(function(item,ii){html+='<div class="faq-item" id="fi'+ci+'_'+ii+'" onclick="toggleFAQ('+ci+','+ii+')"><div class="faq-q">'+item.q+'</div><div class="faq-a">'+item.a+'</div></div>';});
+    html+='</div></div>';
+  });
+  document.getElementById('faq-body').innerHTML=html;
+}
+function toggleCat(ci){var b=document.getElementById('fcb'+ci),a=document.getElementById('fca'+ci);if(b.style.display==='none'){b.style.display='block';a.textContent='▼';}else{b.style.display='none';a.textContent='▶';}}
+function toggleFAQ(ci,ii){document.getElementById('fi'+ci+'_'+ii).classList.toggle('open');}
+function searchFAQ(val){
+  var v=val.toLowerCase().trim();if(!v){renderFAQ();return;}
+  var html='';
+  faqData.forEach(function(cat){cat.items.forEach(function(item){if(item.q.toLowerCase().indexOf(v)>=0||item.a.toLowerCase().indexOf(v)>=0)html+='<div class="faq-item open" style="border:1.5px solid var(--orange);border-radius:8px;margin-bottom:8px;"><div class="faq-q" style="color:var(--orange);">'+item.q+'</div><div class="faq-a" style="display:block;">'+item.a+'</div></div>';});});
+  document.getElementById('faq-body').innerHTML=html||'<div class="info-box"><p>No results found.</p></div>';
+}
+
+// ═══ METRICS ═══
+function renderMetrics(){
+  var m=loadMetrics(),h=loadHistory();
+  var at=m.callsCompleted>0?Math.round(m.totalCallSeconds/m.callsCompleted):0;
+  var avgStr=String(Math.floor(at/60)).padStart(2,'0')+':'+String(at%60).padStart(2,'0');
+  var mt=m.medrecComplete+m.medrecIncomplete;
+  var mr=mt>0?Math.round((m.medrecComplete/mt)*100):0;
+  document.getElementById('metrics-month-label').textContent=m.monthLabel||getMonthLabel();
+  var topE=Object.entries(m.topicsUsed).sort(function(a,b){return b[1]-a[1];}).slice(0,3);
+  var topH=topE.length>0?topE.map(function(e){return'<div class="history-row"><span>'+e[0]+'</span><span><strong>'+e[1]+'</strong></span></div>';}).join(''):'<div class="history-row"><span style="color:#aaa;">None recorded</span></div>';
+  var histH=h.length===0?'<div class="info-box"><p>No previous months yet.</p></div>':h.map(function(mh){var a=mh.callsCompleted>0?Math.round(mh.totalCallSeconds/mh.callsCompleted):0;var mt2=mh.medrecComplete+mh.medrecIncomplete;var mr2=mt2>0?Math.round((mh.medrecComplete/mt2)*100):0;return'<div class="history-item"><div class="history-month">'+(mh.monthLabel||mh.month)+'</div><div class="history-row"><span>Calls</span><span><strong>'+mh.callsCompleted+'</strong></span></div><div class="history-row"><span>Avg Time</span><span><strong>'+String(Math.floor(a/60)).padStart(2,'0')+':'+String(a%60).padStart(2,'0')+'</strong></span></div><div class="history-row"><span>MedRec Rate</span><span><strong>'+mr2+'%</strong></span></div><div class="history-row"><span>Escalations</span><span><strong>'+mh.escalationsCount+'</strong></span></div></div>';}).join('');
+  document.getElementById('metrics-content').innerHTML='<span class="step-badge badge-metrics">Current Month</span><div class="step-title">'+(m.monthLabel||getMonthLabel())+'</div>'
+    +'<div class="metric-grid"><div class="metric-card"><div class="m-label">Calls Completed</div><div class="m-value">'+m.callsCompleted+'</div></div><div class="metric-card"><div class="m-label">No Answer</div><div class="m-value" style="color:var(--red);">'+m.callsNoAnswer+'</div></div><div class="metric-card"><div class="m-label">Avg Call Time</div><div class="m-value" style="font-size:24px;">'+avgStr+'</div></div><div class="metric-card"><div class="m-label">MedRec Rate</div><div class="m-value" style="color:'+(mr>=80?'var(--green)':'var(--yellow)')+';">'+mr+'%</div></div></div>'
+    +'<div class="metric-grid"><div class="metric-card"><div class="m-label">Escalations</div><div class="m-value" style="color:var(--red);">'+m.escalationsCount+'</div></div><div class="metric-card"><div class="m-label">Education Sent</div><div class="m-value" style="color:var(--green);">'+m.educationSent+'</div></div><div class="metric-card"><div class="m-label">Enrollments</div><div class="m-value" style="color:var(--green);">'+m.enrollments+'</div></div><div class="metric-card"><div class="m-label">Callbacks</div><div class="m-value" style="color:var(--yellow);">'+m.callsCallback+'</div></div></div>'
+    +'<div class="metric-card"><div class="m-label">Top Topics</div><div style="margin-top:8px;">'+topH+'</div></div>'
+    +'<div style="margin-bottom:16px;"><label style="font-size:11px;font-weight:700;color:#007a7a;display:block;margin-bottom:4px;">HVA NAME FOR REPORT</label><input id="metrics-hva-name" type="text" placeholder="Type your full name..." class="notes-field" style="min-height:auto;padding:8px 10px;"></div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:24px;"><button class="btn btn-print" onclick="generateMonthlyReport()">🖨️ PDF Report</button><button class="btn btn-email" onclick="emailMonthlyReport()">📧 Email Manager</button></div>'
+    +'<div style="border-top:2px solid var(--border);padding-top:16px;"><div class="section-label">📅 Monthly History</div>'+histH+'</div>'
+    +'<div style="margin-top:16px;"><button class="btn btn-warn btn-full" onclick="confirmReset()">🔄 Archive & Reset for New Month</button></div>';
+  document.getElementById('metrics-footer').innerHTML='<button class="btn btn-home btn-full" onclick="goHome()">← Back to Home</button>';
+}
+function confirmReset(){if(confirm('Archive this month and reset? Cannot be undone.')){archiveAndResetMetrics();renderMetrics();alert('Archived. Dashboard reset.');}}
+function generateMonthlyReport(){
+  var m=loadMetrics();
+  var nameEl=document.getElementById('metrics-hva-name');
+  var name=nameEl?(nameEl.value||'___________________'):'___________________';
+  var now=new Date(),ts=now.toLocaleString(),dateStr=getTodayStr();
+  var at=m.callsCompleted>0?Math.round(m.totalCallSeconds/m.callsCompleted):0;
+  var avgStr=String(Math.floor(at/60)).padStart(2,'0')+':'+String(at%60).padStart(2,'0');
+  var mt=m.medrecComplete+m.medrecIncomplete;
+  var mr=mt>0?Math.round((m.medrecComplete/mt)*100):0;
+  var topicsRows=Object.entries(m.topicsUsed).sort(function(a,b){return b[1]-a[1];}).map(function(e){return'<tr><td style="padding:5px 8px;border:1px solid #ddd;">'+e[0]+'</td><td style="padding:5px 8px;border:1px solid #ddd;text-align:center;">'+e[1]+'</td></tr>';}).join('')||'<tr><td colspan="2" style="padding:5px 8px;color:#aaa;">None recorded</td></tr>';
+  var content='<div style="font-family:Arial,sans-serif;max-width:720px;margin:0 auto;padding:24px;">'
+    +'<div style="text-align:center;border-bottom:3px solid #007a7a;padding-bottom:16px;margin-bottom:20px;"><h2 style="color:#007a7a;margin:0;">SynergyMSO Care Command</h2><h3 style="margin:6px 0;">CCM Monthly Performance Report</h3><p style="font-size:13px;font-weight:700;color:#1a4f8a;">'+(m.monthLabel||m.month)+'</p><p style="font-size:11px;color:#666;">Generated: '+ts+'</p></div>'
+    +'<table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px;"><tr style="background:#e0f5f5;"><td colspan="4" style="padding:8px;font-weight:800;color:#007a7a;">HVA INFORMATION</td></tr><tr><td style="padding:6px 8px;border:1px solid #ddd;font-weight:700;">HVA Name</td><td style="padding:6px 8px;border:1px solid #ddd;">'+name+'</td><td style="padding:6px 8px;border:1px solid #ddd;font-weight:700;">Month</td><td style="padding:6px 8px;border:1px solid #ddd;">'+(m.monthLabel||m.month)+'</td></tr></table>'
+    +'<div style="margin-bottom:16px;border:1px solid #007a7a;border-radius:6px;overflow:hidden;"><div style="background:#e0f5f5;padding:8px 12px;font-weight:800;font-size:12px;color:#007a7a;">CALL ACTIVITY</div><table style="width:100%;border-collapse:collapse;font-size:13px;"><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:700;width:60%;">Calls Completed</td><td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:18px;font-weight:800;color:#007a7a;">'+m.callsCompleted+'</td></tr><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:700;">No Answer</td><td style="padding:8px 12px;border-bottom:1px solid #eee;">'+m.callsNoAnswer+'</td></tr><tr><td style="padding:8px 12px;font-weight:700;">Avg Call Duration</td><td style="padding:8px 12px;font-size:16px;font-weight:800;color:#1a4f8a;">'+avgStr+'</td></tr></table></div>'
+    +'<div style="margin-bottom:16px;border:1px solid #f0c040;border-radius:6px;overflow:hidden;"><div style="background:#fff8e1;padding:8px 12px;font-weight:800;font-size:12px;color:#b07d00;">MEDICATION RECONCILIATION</div><table style="width:100%;border-collapse:collapse;font-size:13px;"><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:700;width:60%;">Completed</td><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:700;color:#1a7a4a;">'+m.medrecComplete+'</td></tr><tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-weight:700;">Incomplete</td><td style="padding:8px 12px;border-bottom:1px solid #eee;color:#c0392b;">'+m.medrecIncomplete+'</td></tr><tr><td style="padding:8px 12px;font-weight:700;">Completion Rate</td><td style="padding:8px 12px;font-size:18px;font-weight:800;color:'+(mr>=80?'#1a7a4a':'#d4820a')+';">'+mr+'%</td></tr></table></div>'
+    +'<div style="margin-bottom:16px;border:1px solid #9a4ab0;border-radius:6px;overflow:hidden;"><div style="background:#f3eafa;padding:8px 12px;font-weight:800;font-size:12px;color:#6a1a8a;">QUESTIONNAIRE TOPICS</div><table style="width:calc(100% - 24px);border-collapse:collapse;font-size:13px;margin:8px 12px;"><tr style="background:#f3eafa;"><th style="padding:5px 8px;border:1px solid #ddd;text-align:left;">Topic</th><th style="padding:5px 8px;border:1px solid #ddd;text-align:center;">Count</th></tr>'+topicsRows+'</table></div>'
+    +'<div style="border:2px solid #6a1a8a;border-radius:8px;padding:16px;margin-bottom:20px;"><div style="font-weight:800;color:#6a1a8a;font-size:12px;margin-bottom:10px;">HVA ATTESTATION</div><p style="font-size:12px;font-style:italic;line-height:1.7;margin-bottom:16px;">"I attest that all data recorded in this report is accurate and reflects activities personally performed by me in accordance with SynergyMSO Care Command CCM protocols."</p><table style="width:100%;border-collapse:collapse;"><tr><td style="width:60%;padding-right:16px;"><div style="border-bottom:1px solid #333;padding-top:8px;font-size:13px;font-weight:700;">'+name+'</div><div style="font-size:10px;color:#888;margin-top:3px;">HVA Printed Name</div></td><td style="width:40%;"><div style="border-bottom:1px solid #333;padding-top:8px;font-size:13px;font-weight:700;">'+dateStr+'</div><div style="font-size:10px;color:#888;margin-top:3px;">Date</div></td></tr></table><div style="margin-top:12px;padding:8px;background:#f0e8fa;border-radius:6px;font-size:11px;color:#3a0a5a;">🕐 Timestamp: '+ts+'</div></div>'
+    +'<p style="font-size:10px;color:#aaa;text-align:center;">© 2025 SynergyMSO · Care Command · Confidential</p></div>';
+  var w=window.open('','_blank');w.document.write('<!DOCTYPE html><html><head><title>CCM Monthly Report</title></head><body>'+content+'</body></html>');w.document.close();setTimeout(function(){w.print();},500);
+}
+function emailMonthlyReport(){
+  var m=loadMetrics();var nameEl=document.getElementById('metrics-hva-name');var name=nameEl?(nameEl.value||'HVA'):'HVA';
+  var at=m.callsCompleted>0?Math.round(m.totalCallSeconds/m.callsCompleted):0;var avgStr=String(Math.floor(at/60)).padStart(2,'0')+':'+String(at%60).padStart(2,'0');
+  var mt=m.medrecComplete+m.medrecIncomplete;var mr=mt>0?Math.round((m.medrecComplete/mt)*100):0;
+  var subject=encodeURIComponent('CCM Monthly Performance Report – '+name+' – '+(m.monthLabel||m.month));
+  var topics=Object.entries(m.topicsUsed).map(function(e){return e[0]+': '+e[1];}).join('\n')||'None';
+  var body=encodeURIComponent('SynergyMSO Care Command\nCCM Monthly Performance Report\nHVA: '+name+'\nMonth: '+(m.monthLabel||m.month)+'\n\nCalls Completed: '+m.callsCompleted+'\nNo Answer: '+m.callsNoAnswer+'\nAvg Duration: '+avgStr+'\nMedRec Rate: '+mr+'%\nEscalations: '+m.escalationsCount+'\nEducation Sent: '+m.educationSent+'\nEnrollments: '+m.enrollments+'\n\nTopics:\n'+topics+'\n\nGenerate full PDF in SynergyMSO Care Command.\n© 2025 SynergyMSO');
+  window.location.href='mailto:ed@synergymso.org?subject='+subject+'&body='+body;
+}
+
+// ═══ TIMER ═══
+function startTimer(){
+  if(timerRunning)return;timerRunning=true;timerStarted=true;
+  timerInterval=setInterval(function(){timerSeconds++;updateTimerDisplay();},1000);
+  var btn=document.getElementById('make-call-btn');if(btn)btn.disabled=false;
+}
+function stopTimer(){
+  timerRunning=false;if(timerInterval)clearInterval(timerInterval);
+  finalTimerDisplay=getTimerStr();pdfData.timerDisplay=finalTimerDisplay;pdfData.timerMet=timerSeconds>=1200;
+  var btn=document.getElementById('final-checklist-btn');if(btn)btn.disabled=false;
+}
+function resetTimer(){
+  timerRunning=false;timerStarted=false;if(timerInterval)clearInterval(timerInterval);
+  timerSeconds=0;finalTimerDisplay='00:00';updateTimerDisplay();
+  var btn=document.getElementById('make-call-btn');if(btn)btn.disabled=true;
+}
+function getTimerStr(){return String(Math.floor(timerSeconds/60)).padStart(2,'0')+':'+String(timerSeconds%60).padStart(2,'0');}
+function updateTimerDisplay(){
+  var el=document.getElementById('live-timer');if(!el)return;el.textContent=getTimerStr();
+  var goal=document.getElementById('timer-goal-msg');
+  if(goal){if(timerSeconds>=1200){goal.textContent='✅ 20-minute minimum reached!';goal.style.color='var(--green)';}else{goal.textContent=Math.ceil((1200-timerSeconds)/60)+' min remaining';goal.style.color='var(--yellow)';}}
+  var btn=document.getElementById('make-call-btn');if(btn&&timerStarted)btn.disabled=false;
+}
+
+// ═══ CHECKBOX ═══
+function toggleCheck(el,nextBtnId){
+  el.classList.toggle('checked');el.querySelector('.cb').textContent=el.classList.contains('checked')?'✓':'';
+  if(nextBtnId){
+    var content=document.getElementById('monthly-content')||document.getElementById('enroll-content')||document.getElementById('disenroll-content');
+    var items=content?content.querySelectorAll('.check-item'):[];
+    var ok=true;items.forEach(function(i){if(!i.classList.contains('checked'))ok=false;});
+    var btn=document.getElementById(nextBtnId);if(btn)btn.disabled=!ok;
+  }
+}
+
+// ═══ PDF/PRINT ═══
+function printWorkflow(type){
+  var now=new Date(),ts=now.toLocaleString(),dateStr=getTodayStr();
+  var nameEl=document.getElementById('hva-name-input');
+  var name=nameEl?(nameEl.value||'___________________'):'___________________';
+  pdfData.hvaName=name;
+  var attestHTML='<div style="border:2px solid #6a1a8a;border-radius:8px;padding:16px;margin-bottom:20px;"><div style="font-weight:800;color:#6a1a8a;font-size:12px;letter-spacing:1px;margin-bottom:10px;">HVA ATTESTATION</div><p style="font-size:12px;font-style:italic;line-height:1.7;margin-bottom:16px;">"I attest that all information documented in this record is accurate, completed in real time, and performed in accordance with SynergyMSO Care Command CCM protocols and CMS billing guidelines."</p><table style="width:100%;border-collapse:collapse;"><tr><td style="width:60%;padding-right:16px;"><div style="border-bottom:1px solid #333;padding-top:8px;font-size:13px;font-weight:700;">'+name+'</div><div style="font-size:10px;color:#888;margin-top:3px;">HVA Printed Name</div></td><td style="width:40%;"><div style="border-bottom:1px solid #333;padding-top:8px;font-size:13px;font-weight:700;">'+dateStr+'</div><div style="font-size:10px;color:#888;margin-top:3px;">Date</div></td></tr></table><div style="margin-top:12px;padding:8px;background:#f0e8fa;border-radius:6px;font-size:11px;color:#3a0a5a;">🕐 Timestamp: '+ts+'</div></div>';
+  var content='';
+  if(type==='monthly'){
+    var quizHTML='<p style="color:#777;font-style:italic;">No questionnaire recorded.</p>';
+    var sessions=pdfData.quizSessions||allQuizSessions||[];
+    if(sessions.length>0){
+      quizHTML='';
+      sessions.forEach(function(s,si){
+        quizHTML+='<div style="margin-bottom:16px;"><p style="font-weight:700;margin-bottom:8px;color:#6a1a8a;">Topic '+(si+1)+': '+s.topic+'</p>';
+        s.qas.forEach(function(qa,qi){
+          var color=qa.cls==='urgent'?'#c0392b':(qa.cls==='concern'?'#d4820a':'#1a7a4a');
+          quizHTML+='<div style="margin-bottom:8px;padding:8px;border:1px solid #ddd;border-radius:6px;"><div style="font-size:12px;font-weight:700;">Q'+(qi+1)+': '+qa.q+'</div><div style="font-size:12px;color:'+color+';">Response: '+qa.a+'</div><div style="font-size:11px;background:#f5f5f5;padding:4px 6px;border-radius:4px;margin-top:4px;">Action: '+qa.r+'</div></div>';
+        });
+        quizHTML+='</div>';
+      });
+    }
+    var escalHTML=pdfData.escalations&&pdfData.escalations.length>0?pdfData.escalations.map(function(e){return'<div style="padding:6px 0;border-bottom:1px solid #eee;font-size:12px;"><strong>'+e.trigger+'</strong><br>'+e.action+'</div>';}).join(''):'<p style="color:#777;font-style:italic;">No escalations triggered.</p>';
+    var specHTML=pdfData.newSpecialist?'<div style="padding:8px;background:#fff8e1;border-radius:6px;font-size:13px;"><p><strong>Specialist Name:</strong> '+pdfData.specialistName+'</p><p><strong>Specialty:</strong> '+pdfData.specialistSpecialty+'</p><p><strong>Phone:</strong> '+pdfData.specialistPhone+'</p></div>':'<p style="color:#777;font-style:italic;">No new specialist reported.</p>';
+    content='<div style="font-family:Arial,sans-serif;max-width:720px;margin:0 auto;padding:24px;">'
+      +'<div style="text-align:center;border-bottom:3px solid #1a4f8a;padding-bottom:16px;margin-bottom:20px;"><h2 style="color:#1a4f8a;margin:0;">SynergyMSO Care Command</h2><h3 style="margin:6px 0;">CCM Monthly Call – Clinical Encounter Record</h3><p style="font-size:13px;font-weight:bold;color:#c0392b;">Upload to eCW CCM/RPM Folder as: CCM Call_'+dateStr+'</p><p style="font-size:11px;color:#666;">Generated: '+ts+'</p></div>'
+      +'<table style="width:100%;border-collapse:collapse;margin-bottom:16px;font-size:13px;"><tr style="background:#f0f4ff;"><td colspan="4" style="padding:8px;font-weight:800;color:#1a4f8a;">ENCOUNTER INFO</td></tr><tr><td style="padding:6px 8px;border:1px solid #ddd;font-weight:700;width:25%;">Date</td><td style="padding:6px 8px;border:1px solid #ddd;">'+dateStr+'</td><td style="padding:6px 8px;border:1px solid #ddd;font-weight:700;">HVA</td><td style="padding:6px 8px;border:1px solid #ddd;">'+name+'</td></tr><tr><td style="padding:6px 8px;border:1px solid #ddd;font-weight:700;">Call Time</td><td style="padding:6px 8px;border:1px solid #ddd;font-size:16px;font-weight:800;color:#1a4f8a;">'+pdfData.timerDisplay+'</td><td style="padding:6px 8px;border:1px solid #ddd;font-weight:700;">20-Min</td><td style="padding:6px 8px;border:1px solid #ddd;font-weight:700;color:'+(pdfData.timerMet?'#1a7a4a':'#c0392b')+'">'+(pdfData.timerMet?'✅ MET':'❌ NOT MET')+'</td></tr></table>'
+      +'<div style="margin-bottom:16px;border:1px solid #2196F3;border-radius:6px;overflow:hidden;"><div style="background:#e8f4fd;padding:8px 12px;font-weight:800;font-size:12px;color:#1565C0;">SECTION 1 — PRISMA REVIEW</div><div style="padding:12px;font-size:13px;"><p>External records reviewed: <strong>'+(pdfData.prismaReviewed?'✅ Yes':'☐ Not confirmed')+'</strong></p></div></div>'
+      +'<div style="margin-bottom:16px;border:1px solid #f0c040;border-radius:6px;overflow:hidden;"><div style="background:#fff8e1;padding:8px 12px;font-weight:800;font-size:12px;color:#b07d00;">SECTION 2 — MEDICATION RECONCILIATION</div><div style="padding:12px;font-size:13px;"><p>Status: <strong style="color:'+(pdfData.medrecStatus==='complete'?'#1a7a4a':'#c0392b')+'">'+(pdfData.medrecStatus==='complete'?'✅ Completed':'⚠️ Incomplete')+'</strong></p>'+(pdfData.medrecNotes?'<p style="margin-top:6px;">Notes: '+pdfData.medrecNotes+'</p>':'')+'</div></div>'
+      +'<div style="margin-bottom:16px;border:1px solid #9a4ab0;border-radius:6px;overflow:hidden;"><div style="background:#f3eafa;padding:8px 12px;font-weight:800;font-size:12px;color:#6a1a8a;">SECTION 3 — MONTHLY HEALTH QUESTIONNAIRE</div><div style="padding:12px;">'+quizHTML+'</div></div>'
+      +'<div style="margin-bottom:16px;border:1px solid #a8d5b5;border-radius:6px;overflow:hidden;"><div style="background:#f0f7f0;padding:8px 12px;font-weight:800;font-size:12px;color:#1a7a4a;">SECTION 4 — PATIENT EDUCATION</div><div style="padding:12px;font-size:13px;"><p>Materials sent: <strong>'+(pdfData.educationSent||'Not recorded')+'</strong></p>'+(pdfData.educationFile?'<p>File: '+pdfData.educationFile+'</p>':'')+'</div></div>'
+      +'<div style="margin-bottom:16px;border:1px solid #dde3ec;border-radius:6px;overflow:hidden;"><div style="background:#f4f6f9;padding:8px 12px;font-weight:800;font-size:12px;color:#4a4a4a;">SECTION 5 — CLOSING NOTES</div><div style="padding:12px;font-size:13px;"><p>Refill Status: <strong>'+(pdfData.refillChoice||'Not recorded')+'</strong></p><p style="margin-top:8px;">New Specialist:</p>'+specHTML+(pdfData.closingNotes?'<p style="margin-top:8px;">Notes: '+pdfData.closingNotes+'</p>':'')+'</div></div>'
+      +'<div style="margin-bottom:16px;border:1px solid #e57373;border-radius:6px;overflow:hidden;"><div style="background:#fff0f0;padding:8px 12px;font-weight:800;font-size:12px;color:#c0392b;">SECTION 6 — ESCALATIONS</div><div style="padding:12px;font-size:13px;">'+escalHTML+'</div></div>'
+      +attestHTML+'<p style="font-size:10px;color:#aaa;text-align:center;">© 2025 SynergyMSO · Care Command · Confidential Medical Record · '+ts+'</p></div>';
+  } else if(type==='enroll'){
+    content='<div style="font-family:Arial,sans-serif;max-width:720px;margin:0 auto;padding:24px;">'
+      +'<div style="text-align:center;border-bottom:3px solid #1a7a4a;padding-bottom:16px;margin-bottom:20px;"><h2 style="color:#1a7a4a;margin:0;">SynergyMSO Care Command</h2><h3 style="margin:6px 0;">CCM Enrollment Documentation</h3><p style="font-size:13px;font-weight:bold;color:#c0392b;">Upload to eCW CCM/RPM Folder as: CCM Enrollment.'+dateStr+'</p><p style="font-size:11px;color:#666;">Generated: '+ts+'</p></div>'
+      +'<table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px;"><tr><td style="padding:6px 8px;border:1px solid #ddd;font-weight:700;width:40%;">Date</td><td style="padding:6px 8px;border:1px solid #ddd;">'+dateStr+'</td></tr><tr><td style="padding:6px 8px;border:1px solid #ddd;font-weight:700;">HVA Name</td><td style="padding:6px 8px;border:1px solid #ddd;">'+name+'</td></tr><tr><td style="padding:6px 8px;border:1px solid #ddd;font-weight:700;">Patient Decision</td><td style="padding:6px 8px;border:1px solid #ddd;font-weight:700;color:'+(enrollBranch.agrees?'#1a7a4a':'#c0392b')+'">'+(enrollBranch.agrees?'✅ Enrolled':'❌ Declined')+'</td></tr></table>'
+      +attestHTML+'</div>';
+  } else if(type==='disenroll'){
+    content='<div style="font-family:Arial,sans-serif;max-width:720px;margin:0 auto;padding:24px;">'
+      +'<div style="text-align:center;border-bottom:3px solid #c0392b;padding-bottom:16px;margin-bottom:20px;"><h2 style="color:#c0392b;margin:0;">SynergyMSO Care Command</h2><h3 style="margin:6px 0;">CCM Disenrollment Documentation</h3><p style="font-size:11px;color:#666;">Generated: '+ts+'</p></div>'
+      +'<table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px;"><tr><td style="padding:6px 8px;border:1px solid #ddd;font-weight:700;width:40%;">Date</td><td style="padding:6px 8px;border:1px solid #ddd;">'+dateStr+'</td></tr><tr><td style="padding:6px 8px;border:1px solid #ddd;font-weight:700;">HVA Name</td><td style="padding:6px 8px;border:1px solid #ddd;">'+name+'</td></tr><tr><td style="padding:6px 8px;border:1px solid #ddd;font-weight:700;">End Date</td><td style="padding:6px 8px;border:1px solid #ddd;">Last day of current month</td></tr></table>'
+      +attestHTML+'</div>';
+  }
+  var w=window.open('','_blank');w.document.write('<!DOCTYPE html><html><head><title>CCM Documentation</title><style>@media print{body{margin:0;}}</style></head><body>'+content+'</body></html>');w.document.close();setTimeout(function(){w.print();},500);
+}
+
+// ═══ TOPICS DATA ═══
+var topics=[
+  {id:'bp',icon:'❤️',name:'Blood Pressure & Heart Health',questions:[
+    {q:'Are you experiencing any chest pain, chest tightness, or severe shortness of breath right now?',opts:[{l:'🚨 Yes — severe/sudden',cls:'urgent',r:'Global Urgent Protocol — Advise 9-1-1. Schedule with Ashli. Document.'},{l:'⚠️ Yes — mild/occasional',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Have you had any dizziness, fainting spells, or palpitations recently?',opts:[{l:'🚨 Yes — fainting',cls:'urgent',r:'Global Urgent Protocol — Advise 9-1-1. Schedule with Ashli.'},{l:'⚠️ Yes — mild',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Are you taking your blood pressure medications exactly as prescribed?',opts:[{l:'❌ No — stopped or changed',cls:'concern',r:'TE to Ashli — Subject: Medication Issue. Document medication name and reason.'},{l:'⚠️ Side effects',cls:'concern',r:'Schedule appointment with Ashli. Document symptoms.'},{l:'✅ Yes',cls:'ok',r:'Ask for last BP reading. Document completed.'}]}
+  ]},
+  {id:'bs',icon:'🩸',name:'Blood Sugar & Diabetes',questions:[
+    {q:'What was your most recent blood sugar reading? Are you checking at home?',opts:[{l:'🚨 Critical reading (<70 or >300)',cls:'urgent',r:'Global Urgent Protocol — Advise 9-1-1. Schedule with Ashli. Document reading.'},{l:'⚠️ Out of range but stable',cls:'concern',r:'Schedule appointment with Ashli. Document reading.'},{l:'✅ Normal / within range',cls:'ok',r:'Document reading. Continue.'}]},
+    {q:'Have you felt shaky, sweaty, extremely tired, or confused recently?',opts:[{l:'🚨 Severe symptoms',cls:'urgent',r:'Global Urgent Protocol — Advise 9-1-1.'},{l:'⚠️ Mild / occasional',cls:'concern',r:'Schedule appointment with Ashli.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Are you taking your diabetes medication exactly as prescribed?',opts:[{l:'❌ No',cls:'concern',r:'Ask reason. Schedule with Ashli. TE if medication issue.'},{l:'✅ Yes',cls:'ok',r:'Continue.'}]},
+    {q:'Do you have enough medication and supplies at home right now?',opts:[{l:'❌ No / running low',cls:'concern',r:'Appointment required before refill. Schedule with Ashli. TE — Medication Issue.'},{l:'✅ Yes',cls:'ok',r:'Questionnaire complete.'}]}
+  ]},
+  {id:'aa',icon:'🌬️',name:'Allergy & Asthma',questions:[
+    {q:'Have you had any shortness of breath, wheezing, or trouble breathing this month?',opts:[{l:'🚨 Severe',cls:'urgent',r:'Global Urgent Protocol — Advise 9-1-1. Schedule with Ashli.'},{l:'⚠️ Worsening but stable',cls:'concern',r:'Schedule appointment with Ashli.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Are you using your rescue inhaler more than once a day?',opts:[{l:'⚠️ Yes — overuse',cls:'concern',r:'Schedule appointment with Ashli — overuse indicates poor control.'},{l:'❌ No inhaler prescribed',cls:'concern',r:'TE to Ashli — Medication Issue.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Are your allergy or asthma symptoms worse than usual this month?',opts:[{l:'⚠️ Yes',cls:'concern',r:'Schedule appointment with Ashli.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Do you need a refill on your inhaler or any allergy medications?',opts:[{l:'⚠️ Yes / running low',cls:'concern',r:'Appointment required before refill. Schedule with Ashli. TE — Medication Issue.'},{l:'✅ No',cls:'ok',r:'Questionnaire complete.'}]}
+  ]},
+  {id:'wm',icon:'⚖️',name:'Weight Monitoring & Healthy Habits',questions:[
+    {q:'Have you noticed any significant weight gain or loss this month without trying?',opts:[{l:'⚠️ Yes — rapid/unexplained (10+ lbs)',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'↔️ Slight change',cls:'ok',r:'Document. Monitor.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Are you skipping meals because of cost, lack of appetite, or not feeling well?',opts:[{l:'⚠️ Yes — illness/no appetite',cls:'concern',r:'Schedule appointment with Ashli.'},{l:'⚠️ Yes — financial concern',cls:'concern',r:'Document social determinant. Schedule with Ashli.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Are you following the diet or nutrition plan your provider recommended?',opts:[{l:'❌ No — too difficult',cls:'concern',r:'Schedule appointment with Ashli. Document barriers.'},{l:'✅ Yes',cls:'ok',r:'Continue.'}]},
+    {q:'Would you like us to send you some tips on healthy eating or meal planning?',opts:[{l:'✅ Yes',cls:'ok',r:'Send via Healow Portal. File: mm/dd/yyyy_Healthy Eating Tips.'},{l:'❌ No',cls:'ok',r:'Questionnaire complete.'}]}
+  ]},
+  {id:'med',icon:'💊',name:'Taking Your Medicines',questions:[
+    {q:'Have you stopped taking any of your Prescription Medications since your last visit to the clinic?',opts:[{l:'⚠️ Yes',cls:'concern',r:'TE to Ashli — Subject: Medication Issue. Document medication name and reason.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Are any of your medications making you feel sick or causing side effects?',opts:[{l:'⚠️ Yes',cls:'concern',r:'Schedule appointment with Ashli. Document symptoms and medication name.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Do you have enough of all your medications at home right now?',opts:[{l:'❌ No / running low',cls:'concern',r:'Appointment required before refill. Schedule with Ashli. TE — Medication Issue.'},{l:'❌ Cannot afford',cls:'concern',r:'TE to Ashli — Subject: Medication Issue. Document affordability concern.'},{l:'✅ Yes',cls:'ok',r:'Continue.'}]},
+    {q:'Has any doctor added, changed, or removed any medications since our last call?',opts:[{l:'⚠️ Yes',cls:'concern',r:'Schedule appointment with Ashli. Document changes.'},{l:'✅ No',cls:'ok',r:'Questionnaire complete.'}]}
+  ]},
+  {id:'mood',icon:'🧠',name:'Mood, Depression, Anxiety & ADHD',questions:[
+    {q:'Have you felt hopeless, very sad, or had any thoughts of hurting yourself recently?',opts:[{l:'🚨 Yes — thoughts of self-harm',cls:'urgent',r:'Global Urgent Protocol — Advise 9-1-1. Schedule with Ashli. Do NOT leave patient alone on call.'},{l:'⚠️ Yes — hopeless/very sad',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Have you been feeling more anxious, stressed, or worried than usual this month?',opts:[{l:'⚠️ Yes — affecting daily life',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'↔️ Mild / manageable',cls:'ok',r:'Document in CCM call.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Are you taking your mental health medications as prescribed?',opts:[{l:'❌ No — stopped on own',cls:'concern',r:'TE to Ashli — Medication Issue. Schedule appointment.'},{l:'⚠️ Side effects',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ Yes',cls:'ok',r:'Continue.'}]},
+    {q:'Would you like us to send you information on managing stress, anxiety, or mood?',opts:[{l:'✅ Yes',cls:'ok',r:'Send via Healow Portal. File: mm/dd/yyyy_Mental Health Tips.'},{l:'❌ No',cls:'ok',r:'Questionnaire complete.'}]}
+  ]},
+  {id:'pain',icon:'🩹',name:'Pain Management',questions:[
+    {q:'Are you experiencing any pain right now? Where is it and rate it 1–10.',opts:[{l:'🚨 8–10 / severe pain',cls:'urgent',r:'If acute — Advise 9-1-1. Schedule with Ashli immediately. Document location and score.'},{l:'⚠️ 4–7 / moderate pain',cls:'concern',r:'Schedule appointment with Ashli. Document location and score.'},{l:'✅ 1–3 / mild or no pain',cls:'ok',r:'Continue.'}]},
+    {q:'Has your pain gotten worse since your last call?',opts:[{l:'⚠️ Yes — significantly worse',cls:'concern',r:'Schedule appointment with Ashli. Document change.'},{l:'✅ Same or better',cls:'ok',r:'Continue.'}]},
+    {q:'Is your pain making it hard to sleep, walk, or do your daily activities?',opts:[{l:'⚠️ Yes',cls:'concern',r:'Schedule appointment with Ashli. Document functional impact.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Would you like us to send you information on pain management strategies?',opts:[{l:'✅ Yes',cls:'ok',r:'Send via Healow Portal. File: mm/dd/yyyy_Pain Management Tips.'},{l:'❌ No',cls:'ok',r:'Questionnaire complete.'}]}
+  ]},
+  {id:'sym',icon:'🌡️',name:'Signs & Symptoms Monitoring',questions:[
+    {q:'Have you had any chest pain, pressure, or trouble breathing recently?',opts:[{l:'🚨 Yes — severe/sudden',cls:'urgent',r:'Global Urgent Protocol — Advise 9-1-1 immediately.'},{l:'⚠️ Yes — mild/occasional',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Have you noticed any new swelling in your legs, feet, or hands?',opts:[{l:'🚨 Yes — sudden/severe',cls:'urgent',r:'Global Urgent Protocol — Advise 9-1-1 immediately.'},{l:'⚠️ Yes — mild/gradual',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Have you felt dizzy, weak, or had any fainting spells since your last call?',opts:[{l:'🚨 Yes — fainting/severe',cls:'urgent',r:'Global Urgent Protocol — Advise 9-1-1 immediately.'},{l:'⚠️ Yes — mild dizziness',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Overall, do you feel better, worse, or the same as last month?',opts:[{l:'⚠️ Worse — not seen doctor',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ Same or better',cls:'ok',r:'Questionnaire complete.'}]}
+  ]},
+  {id:'falls',icon:'🏠',name:'Falls & Safety at Home',questions:[
+    {q:'Have you fallen or almost fallen in the past month?',opts:[{l:'🚨 Yes — fell and was injured',cls:'urgent',r:'Schedule with Ashli immediately. Document fall details.'},{l:'⚠️ Yes — near fall / no injury',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Are you feeling more unsteady on your feet or dizzy when you stand up?',opts:[{l:'⚠️ Yes',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Is your home safe — grab bars, good lighting, clear pathways?',opts:[{l:'❌ No — safety concerns',cls:'ok',r:'Provide home safety education. Document.'},{l:'✅ Yes',cls:'ok',r:'Continue.'}]},
+    {q:'Would you like us to send you a home safety checklist to help prevent falls?',opts:[{l:'✅ Yes',cls:'ok',r:'Send via Healow Portal. File: mm/dd/yyyy_Home Safety Checklist.'},{l:'❌ No',cls:'ok',r:'Questionnaire complete.'}]}
+  ]},
+  {id:'slp',icon:'😴',name:'Sleep & Tiredness',questions:[
+    {q:'Have you been having trouble falling or staying asleep for more than a week?',opts:[{l:'⚠️ Yes',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'↔️ Occasionally',cls:'ok',r:'Document in CCM call.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Are you so tired during the day it affects your normal activities?',opts:[{l:'⚠️ Yes — significantly',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ Mild or no',cls:'ok',r:'Continue.'}]},
+    {q:'Does anyone tell you that you snore loudly or stop breathing while sleeping?',opts:[{l:'⚠️ Yes',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Would you like us to send you some tips on improving your sleep?',opts:[{l:'✅ Yes',cls:'ok',r:'Send via Healow Portal. File: mm/dd/yyyy_Sleep Health Tips.'},{l:'❌ No',cls:'ok',r:'Questionnaire complete.'}]}
+  ]},
+  {id:'foot',icon:'🦶',name:'Foot Care',questions:[
+    {q:'Do you have any cuts, sores, blisters, or wounds on your feet that are not healing?',opts:[{l:'🚨 Yes — open wound/not healing',cls:'urgent',r:'Schedule with Ashli immediately. Document location and description.'},{l:'↔️ Minor / healing well',cls:'ok',r:'Document in CCM call.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Are your feet feeling numb, cold, or have you noticed any color changes?',opts:[{l:'⚠️ Yes',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Are you checking your feet daily and wearing proper shoes and socks at all times?',opts:[{l:'❌ No',cls:'ok',r:'Provide foot care education. Document.'},{l:'✅ Yes',cls:'ok',r:'Continue.'}]},
+    {q:'Would you like us to send you information on proper foot care?',opts:[{l:'✅ Yes',cls:'ok',r:'Send via Healow Portal. File: mm/dd/yyyy_Foot Care Tips.'},{l:'❌ No',cls:'ok',r:'Questionnaire complete.'}]}
+  ]},
+  {id:'prev',icon:'🔬',name:'Preventive Screenings',questions:[
+    {q:'Are you having any new symptoms you have not told your provider about?',opts:[{l:'⚠️ Yes',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Have you had your annual blood tests, eye exam, or dental exam this year?',opts:[{l:'❌ No — one or more missed',cls:'ok',r:'Encourage patient to schedule. Document which exams are overdue.'},{l:'✅ Yes',cls:'ok',r:'Continue.'}]},
+    {q:'Have you skipped any screenings because of cost, fear, or transportation?',opts:[{l:'⚠️ Yes',cls:'concern',r:'Schedule appointment with Ashli. Document barrier.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Would you like us to send you a list of recommended preventive screenings?',opts:[{l:'✅ Yes',cls:'ok',r:'Send via Healow Portal. File: mm/dd/yyyy_Preventive Screenings Guide.'},{l:'❌ No',cls:'ok',r:'Questionnaire complete.'}]}
+  ]},
+  {id:'food',icon:'🥗',name:'Food & Eating Habits',questions:[
+    {q:'Have you noticed significant weight gain or loss recently without trying?',opts:[{l:'⚠️ Yes — rapid/unexplained',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'↔️ Slight/gradual',cls:'ok',r:'Document in CCM call.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Are you skipping meals due to cost, lack of appetite, or not feeling well?',opts:[{l:'⚠️ Yes — illness/no appetite',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'⚠️ Yes — financial',cls:'concern',r:'Document food insecurity in CCM call.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Are you drinking enough water daily? Any dizziness or dark urine?',opts:[{l:'⚠️ Yes — dizzy/dehydrated',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'↔️ Mildly dehydrated',cls:'ok',r:'Provide hydration education. Document.'},{l:'✅ No issues',cls:'ok',r:'Continue.'}]},
+    {q:'Would you like us to send healthy eating tips for your condition?',opts:[{l:'✅ Yes',cls:'ok',r:'Send via Healow Portal. File: mm/dd/yyyy_Healthy Eating Tips.'},{l:'❌ No',cls:'ok',r:'Questionnaire complete.'}]}
+  ]},
+  {id:'sub',icon:'🚬',name:'Smoking, Alcohol & Substances',questions:[
+    {q:'Do you currently smoke, vape, or use any tobacco products?',opts:[{l:'⚠️ Yes',cls:'concern',r:'Document in CCM call.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'How often do you drink alcohol? Has that increased recently?',opts:[{l:'⚠️ Daily or increased',cls:'concern',r:'Document in CCM call.'},{l:'↔️ Occasionally / stable',cls:'ok',r:'Document in CCM call.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Are you taking any medications, supplements, or herbal products not prescribed?',opts:[{l:'⚠️ Yes',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Have you felt sick or unwell after using tobacco, alcohol, or any substances?',opts:[{l:'🚨 Yes — severe',cls:'urgent',r:'Global Urgent Protocol — Advise 9-1-1. Schedule with Ashli.'},{l:'⚠️ Yes — mild',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ No',cls:'ok',r:'Questionnaire complete.'}]}
+  ]},
+  {id:'dig',icon:'🫁',name:'Digestive Health & Hydration',questions:[
+    {q:'Have you had any stomach pain, cramping, or discomfort that will not go away?',opts:[{l:'⚠️ Yes — severe/persistent',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'↔️ Mild/occasional',cls:'ok',r:'Document in CCM call.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Have you had persistent constipation, diarrhea, or blood in your stool?',opts:[{l:'🚨 Yes — blood in stool',cls:'urgent',r:'Global Urgent Protocol if severe — Advise 9-1-1. Schedule with Ashli immediately.'},{l:'⚠️ Yes — persistent symptoms',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ No',cls:'ok',r:'Continue.'}]},
+    {q:'Are you drinking enough water daily? Any dizziness or dark urine?',opts:[{l:'⚠️ Yes — dizzy/dehydrated',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'↔️ Mildly dehydrated',cls:'ok',r:'Provide hydration education.'},{l:'✅ No issues',cls:'ok',r:'Continue.'}]},
+    {q:'Would you like tips on digestive health and staying hydrated?',opts:[{l:'✅ Yes',cls:'ok',r:'Send via Healow Portal. File: mm/dd/yyyy_Digestive Health Tips.'},{l:'❌ No',cls:'ok',r:'Questionnaire complete.'}]}
+  ]},
+  {id:'ex',icon:'🏃',name:'Moving Around & Exercise',questions:[
+    {q:'Have you had more trouble walking or moving around this month?',opts:[{l:'⚠️ Yes — significantly worse',cls:'concern',r:'Schedule appointment with Ashli. Document change in mobility.'},{l:'↔️ Mild/slight',cls:'ok',r:'Document in CCM call.'},{l:'✅ No change',cls:'ok',r:'Continue.'}]},
+    {q:'Are you doing any physical activity — walks, stretching, or exercises?',opts:[{l:'❌ No — too painful or tired',cls:'concern',r:'Schedule appointment with Ashli. Document reason.'},{l:'↔️ Some activity',cls:'ok',r:'Encourage and document.'},{l:'✅ Yes — regularly',cls:'ok',r:'Continue.'}]},
+    {q:'Do you feel safe exercising on your own, or do you need help or equipment?',opts:[{l:'⚠️ No — safety concern',cls:'concern',r:'Schedule appointment with Ashli. Document.'},{l:'✅ Yes — safe',cls:'ok',r:'Continue.'}]},
+    {q:'Would you like us to send some gentle exercise tips for your condition?',opts:[{l:'✅ Yes',cls:'ok',r:'Send via Healow Portal. File: mm/dd/yyyy_Exercise Tips.'},{l:'❌ No',cls:'ok',r:'Questionnaire complete.'}]}
+  ]}
+];
+
+// ═══ QUIZ ENGINE ═══
+var currentQuizTopic=null,quizStep=0,currentQuizQAs=[];
+function startQuiz(topicId){
+  var topic=topics.find(function(t){return t.id===topicId;});
+  if(!topic)return;
+  currentQuizTopic=topic;quizStep=0;currentQuizQAs=[];
+  selectedTopic=topic.name;
+  document.getElementById('quiz-header-title').textContent=topic.icon+' '+topic.name;
+  renderQuiz();showScreen('screen-quiz');
+}
+function renderQuiz(){
+  var q=currentQuizTopic.questions[quizStep];
+  var total=currentQuizTopic.questions.length;
+  document.getElementById('quiz-sub').textContent='Question '+(quizStep+1)+' of '+total;
+  document.getElementById('quiz-progress').style.width=(((quizStep+1)/total)*100)+'%';
+  var btns=q.opts.map(function(o,i){return'<button class="quiz-btn '+o.cls+'" onclick="answerQuiz('+i+')">'+(o.cls==='urgent'?'🚨 ':o.cls==='concern'?'⚠️ ':'✅ ')+o.l+'</button>';}).join('');
+  document.getElementById('quiz-content').innerHTML='<span class="step-badge badge-quiz">'+currentQuizTopic.icon+' '+currentQuizTopic.name+' · Q'+(quizStep+1)+' of '+total+'</span><div class="step-title">Health Questionnaire</div><div class="quiz-box"><div class="quiz-q">"'+q.q+'"</div><div class="quiz-btn-row">'+btns+'</div></div>';
+  document.getElementById('quiz-footer').innerHTML='<button class="btn btn-back" onclick="quizBack()">← Back</button>';
+}
+function answerQuiz(optIdx){
+  var q=currentQuizTopic.questions[quizStep];
+  var opt=q.opts[optIdx];
+  currentQuizQAs.push({q:q.q,a:opt.l,r:opt.r,cls:opt.cls});
+  if(opt.cls==='urgent'){
+    pdfData.escalations.push({trigger:q.q,action:opt.r});
+    showQuizResult(opt,'urgent');
+  } else if(opt.cls==='concern'){
+    showQuizResult(opt,'concern');
+  } else {
+    if(quizStep<currentQuizTopic.questions.length-1){quizStep++;renderQuiz();}
+    else{finishQuiz();}
+  }
+}
+function showQuizResult(opt,cls){
+  var resultBox='<div class="quiz-result '+cls+'">'+(cls==='urgent'?'🚨 URGENT: ':'⚠️ CONCERN: ')+opt.r+'</div>';
+  document.getElementById('quiz-content').innerHTML+='<div id="quiz-result-area">'+resultBox+'</div>';
+  var nextLabel=quizStep<currentQuizTopic.questions.length-1?'Next Question →':'Finish Topic ✓';
+  document.getElementById('quiz-footer').innerHTML='<button class="btn btn-back" onclick="quizBack()">← Back</button><button class="btn btn-next" onclick="quizContinue()">'+nextLabel+'</button>';
+}
+function quizContinue(){
+  if(quizStep<currentQuizTopic.questions.length-1){quizStep++;renderQuiz();}
+  else{finishQuiz();}
+}
+function quizBack(){
+  if(quizStep>0){quizStep--;currentQuizQAs.pop();renderQuiz();}
+  else{backToTopicSelector();}
+}
+function finishQuiz(){
+  var session={topic:currentQuizTopic.name,icon:currentQuizTopic.icon,qas:currentQuizQAs.slice()};
+  allQuizSessions.push(session);
+  if(!pdfData.quizSessions)pdfData.quizSessions=[];
+  pdfData.quizSessions.push(session);
+  completedTopics.push(currentQuizTopic.name);
+  var m=loadMetrics();
+  m.topicsUsed[currentQuizTopic.name]=(m.topicsUsed[currentQuizTopic.name]||0)+1;
+  saveMetrics(m);
+  backToTopicSelector();
+}
+function backToTopicSelector(){
+  monthlyStep=6;renderMonthly();showScreen('screen-monthly');
+}
+
+// ═══ ENROLLMENT WORKFLOW ═══
+var enrollStepsData=[
+  {render:function(){
+    return '<span class="step-badge badge-enroll">Enrollment · Step 1 of 9</span><div class="step-title">Prepare CCM Candidate List</div>'
+      +'<div class="ecw-box"><div class="ecw-label">📋 eCW – EBO Report</div>'
+      +'<div class="ecw-step"><div class="ecw-num">1</div><p>Menu → <strong>EBO Reports</strong> → CCM Reports folder</p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">2</div><p>Select <strong>"CCM 1 – Eligible Patients with Upcoming Appointments"</strong></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">3</div><p>Date range: <strong>next 3 business days</strong> → Download to Excel</p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">4</div><p>Open patient chart <strong>2 days before their visit</strong></p></div></div>'
+      +'<div class="info-box"><p>Review chart before visit so the provider can discuss CCM eligibility during the appointment.</p></div>';
+  },footer:function(){return'<button class="btn btn-home" onclick="goHome()">⌂ Home</button><button class="btn btn-next" onclick="enrollNext()">Next →</button>';}},
+  {render:function(){
+    return '<span class="step-badge badge-enroll">Enrollment · Step 2 of 9</span><div class="step-title">Flag Patient Chart in eCW</div>'
+      +'<div class="ecw-box"><div class="ecw-label">📋 eCW – Chief Complaints</div>'
+      +'<div class="ecw-step"><div class="ecw-num">1</div><p>Open patient chart</p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">2</div><p>Go to <strong>Chief Complaints</strong> section</p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">3</div><p>Add flag: <strong>"CCM Eligible – Discuss with Provider"</strong></p></div></div>';
+  },footer:function(){return'<button class="btn btn-back" onclick="enrollBack()">← Back</button><button class="btn btn-next" onclick="enrollNext()">Next →</button>';}},
+  {render:function(){
+    return '<span class="step-badge badge-enroll">Enrollment · Step 3 of 9</span><div class="step-title">Provider Discusses CCM with Patient</div>'
+      +'<div class="info-box"><p>The provider discusses CCM eligibility during the patient visit. <strong>Ashli creates a TE</strong> to confirm the discussion and authorize the enrollment call.</p></div>'
+      +'<div class="warn-box"><div class="warn-label">⚠️ Wait for TE from Ashli</div><p>Do not proceed to enrollment call until TE from Ashli is received confirming provider authorization.</p></div>';
+  },footer:function(){return'<button class="btn btn-back" onclick="enrollBack()">← Back</button><button class="btn btn-next" onclick="enrollNext()">✓ TE Received →</button>';}},
+  {render:function(){
+    return '<span class="step-badge badge-enroll">Enrollment · Step 4 of 9</span><div class="step-title">Make the Enrollment Call</div>'
+      +'<div class="script-box"><div class="script-label">📞 Enrollment Call Script</div>'
+      +'<p>"Hello, may I speak with [Patient Name]? ... Hi, this is [Your Name] calling from Kokoro Health & Wellness, the office of Dr. Nguyen and PA Ashli. How are you today? ... I am calling because your provider has identified you as a great candidate for our Chronic Care Management program — a Medicare benefit designed to help patients with chronic conditions like yours get the ongoing support they need between office visits."</p></div>'
+      +'<div class="script-box"><div class="script-label">📞 Continue — Describe Benefits</div>'
+      +'<p>"As part of this program, you would receive a monthly call from me where we check in on your health, review your medications, answer any questions, and make sure you have everything you need. It is a free benefit through Medicare designed to help you stay healthy and avoid unnecessary hospital visits."</p></div>';
+  },footer:function(){return'<button class="btn btn-back" onclick="enrollBack()">← Back</button><button class="btn btn-next" onclick="enrollNext()">Next →</button>';}},
+  {render:function(){
+    return '<span class="step-badge badge-enroll">Enrollment · Step 5 of 9</span><div class="step-title">Handle Cost Questions</div>'
+      +'<div class="script-box"><div class="script-label">💰 If Patient Has Secondary Insurance</div>'
+      +'<p>"Since you have a secondary insurance plan, that typically covers the small cost-sharing amount — so there is usually no out-of-pocket cost to you."</p></div>'
+      +'<div class="script-box"><div class="script-label">💰 If Patient Has No Secondary / Asks About Cost</div>'
+      +'<p>"A small cost-sharing amount may apply — similar to any Medicare service. However, the ongoing support you receive through this program could save you significantly by helping prevent costly hospital visits and keeping you healthier overall."</p></div>'
+      +'<div class="warn-box"><div class="warn-label">⚠️ If Patient Declines Due to Cost</div><p>Document: "Patient declined enrollment — cost concern." Do NOT pressure the patient. Proceed to Step 6 (Declined branch).</p></div>';
+  },footer:function(){return'<button class="btn btn-back" onclick="enrollBack()">← Back</button><button class="btn btn-next" onclick="enrollNext()">Next →</button>';}},
+  {render:function(){
+    return '<span class="step-badge badge-enroll">Enrollment · Step 6 of 9</span><div class="step-title">Patient Decision</div>'
+      +'<div class="branch-q">Did the patient agree to enroll in the CCM program?</div>';
+  },footer:function(){
+    return'<button class="btn btn-back" onclick="enrollBack()">← Back</button>'
+      +'<button class="btn btn-yes" onclick="enrollBranch.agrees=true;enrollNext()">✅ Yes — Agreed</button>'
+      +'<button class="btn btn-no" onclick="enrollBranch.agrees=false;enrollDeclined()">❌ No — Declined</button>';
+  }},
+  {render:function(){
+    return '<span class="step-badge badge-enroll">eCW Action · Step 7 of 9</span><div class="step-title">eCW – Open Patient Hub</div>'
+      +'<div class="ecw-box"><div class="ecw-label">📋 eCW – Patient Hub</div>'
+      +'<div class="ecw-step"><div class="ecw-num">1</div><p>Open patient chart</p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">2</div><p>Click <strong>Patient Hub</strong></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">3</div><p>Click <strong>"Enroll Now"</strong> in the CCM section</p></div></div>';
+  },footer:function(){return'<button class="btn btn-back" onclick="enrollBack()">← Back</button><button class="btn btn-next" onclick="enrollNext()">✓ Opened →</button>';}},
+  {render:function(){
+    return '<span class="step-badge badge-enroll">eCW Action · Step 8 of 9</span><div class="step-title">eCW – Complete Program Enrollment Screen</div>'
+      +'<div class="stop-box"><div class="stop-label">🔴 ALL HIGHLIGHTED FIELDS REQUIRED</div><p>Do not save until every field is complete.</p></div>'
+      +'<div class="ecw-box"><div class="ecw-label">📋 Program Enrollment – Required Fields</div>'
+      +'<div class="ecw-step"><div class="ecw-num">1</div><p><span class="field-tag">Start Date</span> → Enter <strong>today\'s date</strong></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">2</div><p><span class="field-tag">Enrollment Status</span> → Click <strong>Enroll</strong></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">3</div><p><span class="field-tag">Consent Type</span> → Select <strong>Verbal</strong></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">4</div><p><span class="field-tag">Consent Date</span> → Select <strong>today\'s date</strong></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">5</div><p><span class="field-tag">Enrollment Notes</span> → Type exactly:<br><em>"Patient has Agreed to enroll via Verbal Consent.<br>Enrollment Transcript Attached to the Chart<br>Patient Understands Cost-sharing for CCM Services"</em></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">6</div><p><span class="field-tag">Select Chronic Conditions</span> → Select <strong>CCM</strong> radio button <span class="required-tag">REQUIRED</span></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">7</div><p><span class="field-tag">Staff Name</span> → Search for <strong>your name</strong></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">8</div><p><span class="field-tag">Role</span> → Select <strong>Care Coordinator</strong></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">9</div><p>Click <strong>Save</strong></p></div></div>'
+      +'<div class="checklist" id="e8-checklist">'
+      +'<div class="check-item" onclick="toggleCheck(this,\'e8-next\')"><div class="cb"></div><div class="cb-label">Program = Chronic Care Management confirmed</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'e8-next\')"><div class="cb"></div><div class="cb-label">Start Date, Consent Type, Consent Date entered</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'e8-next\')"><div class="cb"></div><div class="cb-label">Enrollment Notes typed correctly</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'e8-next\')"><div class="cb"></div><div class="cb-label">CCM radio button selected for Chronic Conditions</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'e8-next\')"><div class="cb"></div><div class="cb-label">Care Coordinator role assigned and Saved</div></div></div>';
+  },footer:function(){return'<button class="btn btn-back" onclick="enrollBack()">← Back</button><button class="btn btn-next" id="e8-next" onclick="enrollNext();recordEnrollment();" disabled>✓ Saved in eCW →</button>';}},
+  {render:function(){
+    var now=new Date(),ts=now.toLocaleString(),dateStr=getTodayStr();
+    return '<span class="step-badge badge-enroll">Complete · Step 9 of 9</span><div class="step-title">Enrollment Complete & Upload PDF</div>'
+      +'<div class="summary-box"><div class="check-big">✅</div><h3>Enrollment Successful!</h3><p>Patient enrolled. eCW updated. Now print the PDF and upload to eCW.</p></div>'
+      +'<div class="doc-box"><div class="doc-label">📤 Upload Enrollment PDF to eCW</div>'
+      +'<div class="doc-line"><div class="doc-num">1</div><p>Click <strong>🖨️ Print PDF</strong> below to generate the enrollment document</p></div>'
+      +'<div class="doc-line"><div class="doc-num">2</div><p>Save the PDF with this exact file name:<br><strong>CCM Enrollment.'+dateStr+'</strong></p></div>'
+      +'<div class="doc-line"><div class="doc-num">3</div><p>Open patient chart in eCW</p></div>'
+      +'<div class="doc-line"><div class="doc-num">4</div><p>Navigate to the patient\'s <strong>CCM/RPM folder</strong></p></div>'
+      +'<div class="doc-line"><div class="doc-num">5</div><p>Upload the saved PDF to the CCM/RPM folder</p></div></div>'
+      +'<div class="attest-box"><div class="attest-label">✍️ HVA Attestation</div>'
+      +'<p>"I attest that all information documented is accurate and performed in accordance with SynergyMSO Care Command CCM protocols and CMS billing guidelines."</p>'
+      +'<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:#6a1a8a;display:block;margin-bottom:4px;">HVA PRINTED NAME</label>'
+      +'<input id="hva-name-input" type="text" placeholder="Type your full name here..." style="border:none;border-bottom:2px solid #9a4ab0;width:100%;padding:6px 2px;font-size:14px;background:transparent;outline:none;font-weight:600;"></div>'
+      +'<div style="margin-top:10px;padding:6px 8px;background:#f0e8fa;border-radius:6px;font-size:11px;color:#3a0a5a;">🕐 '+ts+'</div></div>'
+      +'<div style="margin-top:4px;padding:8px;background:var(--green-light);border-radius:6px;font-size:11px;color:var(--green);font-weight:700;">Date: '+dateStr+'</div>';
+  },footer:function(){return'<button class="btn btn-back" onclick="enrollBack()">← Back</button><button class="btn btn-print" onclick="printWorkflow(\'enroll\')">🖨️ Print PDF</button>';}}
+];
+function enrollNext(){enrollStep++;renderEnroll();}
+function enrollBack(){if(enrollStep>0){enrollStep--;renderEnroll();}}
+function enrollDeclined(){
+  var dateStr=getTodayStr(),now=new Date(),ts=now.toLocaleString();
+  enrollBranch.agrees=false;
+  document.getElementById('enroll-content').innerHTML='<span class="step-badge badge-enroll">Declined · Documentation</span><div class="step-title">Patient Declined – Document & Close</div>'
+    +'<div class="warn-box"><div class="warn-label">⚠️ Patient Declined CCM</div><p>Document the patient\'s decision in eCW. Do not bill for this interaction.</p></div>'
+    +'<div class="ecw-box"><div class="ecw-label">📋 eCW – Documentation</div>'
+    +'<div class="ecw-step"><div class="ecw-num">1</div><p>Open patient chart → Create a Telephone Encounter</p></div>'
+    +'<div class="ecw-step"><div class="ecw-num">2</div><p>Document: <em>"Patient contacted regarding CCM enrollment. Patient declined participation."</em></p></div>'
+    +'<div class="ecw-step"><div class="ecw-num">3</div><p>Document reason if patient provided one</p></div>'
+    +'<div class="ecw-step"><div class="ecw-num">4</div><p>Close the TE</p></div></div>'
+    +'<div class="attest-box"><div class="attest-label">✍️ HVA Attestation</div>'
+    +'<p>"I attest that all information documented is accurate and performed in accordance with SynergyMSO Care Command CCM protocols."</p>'
+    +'<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:#6a1a8a;display:block;margin-bottom:4px;">HVA PRINTED NAME</label>'
+    +'<input id="hva-name-input" type="text" placeholder="Type your full name here..." style="border:none;border-bottom:2px solid #9a4ab0;width:100%;padding:6px 2px;font-size:14px;background:transparent;outline:none;font-weight:600;"></div>'
+    +'<div style="margin-top:10px;padding:6px 8px;background:#f0e8fa;border-radius:6px;font-size:11px;color:#3a0a5a;">🕐 '+ts+'</div></div>'
+    +'<div style="margin-top:4px;padding:8px;background:var(--green-light);border-radius:6px;font-size:11px;color:var(--green);font-weight:700;">Date: '+dateStr+'</div>';
+  document.getElementById('enroll-footer').innerHTML='<button class="btn btn-home" onclick="goHome()">⌂ Home</button><button class="btn btn-print" onclick="printWorkflow(\'enroll\')">🖨️ Print PDF</button>';
+}
+function renderEnroll(){
+  var total=enrollStepsData.length,cur=enrollStepsData[enrollStep];if(!cur)return;
+  document.getElementById('enroll-sub').textContent='Step '+(enrollStep+1)+' of '+total;
+  document.getElementById('enroll-progress').style.width=(((enrollStep+1)/total)*100)+'%';
+  document.getElementById('enroll-content').innerHTML=cur.render();
+  document.getElementById('enroll-footer').innerHTML=cur.footer();
+  renderStepNav('enroll-nav',total,enrollStep,'jumpEnroll');
+}
+
+// ═══ MONTHLY WORKFLOW ═══
+var monthlyStepsData=[
+  // Step 1 - Timer & PRISMA
+  {render:function(){
+    return '<span class="step-badge badge-monthly">Start · Step 1 of 11</span><div class="step-title">Start Timer & Pre-Call Chart Review</div>'
+      +'<div class="timer-box"><div id="live-timer" class="timer-display">00:00</div><div class="timer-label">Time elapsed this session</div><div id="timer-goal-msg" class="timer-goal" style="color:var(--yellow);">20 min remaining</div>'
+      +'<div class="timer-controls"><button class="btn btn-yes" onclick="startTimer()">▶ Start</button><button class="btn btn-stop" onclick="resetTimer()">↺ Reset</button></div></div>'
+      +'<div class="prisma-box"><div class="prisma-label">🔵 PRISMA – Review External Records First</div><ul>'
+      +'<li>Click <strong>PRISMA</strong> button in Patient Hub</li>'
+      +'<li>Filter to <strong>External Records</strong></li>'
+      +'<li>Review for: hospital discharges, specialist visit notes</li>'
+      +'<li><strong>Note any new medications</strong> — bring up during call</li>'
+      +'<li><strong>Note any recent hospitalizations</strong> — schedule follow-up with Ashli</li></ul></div>'
+      +'<div class="warn-box"><div class="warn-label">⚠️ Also Review Before Calling</div><ul>'
+      +'<li>Last CCM note and current med list</li>'
+      +'<li>Recent KHW visits or new medications</li>'
+      +'<li>Patient Care Team for specialists</li></ul></div>';
+  },footer:function(){
+    return'<button class="btn btn-home" onclick="goHome()">⌂ Home</button><button class="btn btn-next" id="make-call-btn" onclick="pdfData.prismaReviewed=true;monthlyNext();" disabled>→ Make the Call</button>';
+  }},
+  // Step 2 - Make the call
+  {render:function(){
+    return '<span class="step-badge badge-monthly">Call · Step 2 of 11</span><div class="step-title">Open the Call</div>'
+      +'<div class="script-box"><div class="script-label">📞 Opening Script</div>'
+      +'<p>"Hello, may I speak with [Patient Name]? ... Hi [Patient Name], this is [Your Name] calling from Kokoro Health & Wellness, the office of Dr. Nguyen and PA Ashli. I am calling for your monthly Chronic Care Management check-in. Is now a good time to talk?"</p></div>'
+      +'<div class="stop-box"><div class="stop-label">🔴 Identity Verification — Required</div>'
+      +'<p>Before proceeding: <strong>"Can you please confirm your full name and date of birth?"</strong></p>'
+      +'<p style="margin-top:6px;">If information does NOT match the chart — do NOT continue. End call and notify Ashli.</p></div>';
+  },footer:function(){
+    return'<button class="btn btn-back" onclick="monthlyBack()">← Back</button>'
+      +'<button class="btn btn-yes" onclick="pdfData.patientReached=true;monthlyNext()">✅ Patient Reached</button>'
+      +'<button class="btn btn-no" onclick="showNoAnswer()">📵 No Answer</button>';
+  }},
+  // Step 3 - Good time
+  {render:function(){
+    return '<span class="step-badge badge-monthly">Call · Step 3 of 11</span><div class="step-title">Confirm Good Time to Talk</div>'
+      +'<div class="branch-q">Is this a good time for the patient to talk?</div>'
+      +'<div class="script-box"><div class="script-label">📞 If Not a Good Time</div>'
+      +'<p>"Of course! When would be a better time for me to call you back? I am available [days/times]."</p>'
+      +'<div class="script-note">Document in eCW: "Patient reached – not a good time. Callback scheduled for [date/time]." Record callback time.</div></div>';
+  },footer:function(){
+    return'<button class="btn btn-back" onclick="monthlyBack()">← Back</button>'
+      +'<button class="btn btn-yes" onclick="pdfData.goodTime=true;monthlyNext()">✅ Good Time</button>'
+      +'<button class="btn btn-warn" onclick="showCallback()">📅 Schedule Callback</button>';
+  }},
+  // Step 4 - Recent visits
+  {render:function(){
+    return '<span class="step-badge badge-monthly">Check-In · Step 4 of 11</span><div class="step-title">Recent Visits & Specialist Check</div>'
+      +'<div class="script-box"><div class="script-label">📞 Script</div>'
+      +'<p>"Since our last call, have you had any ER visits, hospital stays, or urgent care visits? ... Have you seen any specialists recently?"</p></div>'
+      +'<div class="info-box"><p>If ER or hospitalization: Schedule follow-up with Ashli · Document in CCM call<br>If new specialist: Note name, specialty, and phone number — will be captured in Step 9 closing questions</p></div>';
+  },footer:function(){return'<button class="btn btn-back" onclick="monthlyBack()">← Back</button><button class="btn btn-next" onclick="monthlyNext()">Next →</button>';}},
+  // Step 5 - MedRec
+  {render:function(){
+    return '<span class="step-badge badge-monthly">MedRec · Step 5 of 11</span><div class="step-title">Medication Reconciliation</div>'
+      +'<div class="stop-box"><div class="stop-label">🔴 HARD STOP – Patient Must Be On The Phone</div><p>NEVER perform MedRec without the patient or caregiver actively on the call.</p></div>'
+      +'<div class="stop-box"><div class="stop-label">🔴 COMPLIANCE ALERT</div><p>HVAs are strictly PROHIBITED from accessing, modifying, or adding notes in the Medication/RX tab. All MedRec documentation must be entered in the CCM Call Notes section ONLY.</p></div>'
+      +'<div class="script-box"><div class="script-label">📞 MedRec Script</div>'
+      +'<p>"I would like to go over your medications with you today to make sure our records are current. Can you read me each medication you are taking, including the dose and how often you take it?"</p></div>'
+      +'<div class="branch-q">Were you able to complete MedRec with patient on the phone?</div>';
+  },footer:function(){
+    return'<button class="btn btn-back" onclick="monthlyBack()">← Back</button>'
+      +'<button class="btn btn-yes" onclick="pdfData.medrecStatus=\'complete\';monthlyNext()">✅ MedRec Complete</button>'
+      +'<button class="btn btn-stop" onclick="pdfData.medrecStatus=\'incomplete\';monthlyNext()">❌ Incomplete</button>';
+  }},
+  // Step 6 - Document MedRec
+  {render:function(){
+    return '<span class="step-badge badge-monthly">Documentation · Step 6 of 11</span><div class="step-title">Document MedRec in CCM Call Notes</div>'
+      +'<div class="stop-box"><div class="stop-label">🔴 COMPLIANCE ALERT — DO NOT ACCESS RX/MEDICATION TAB</div><p>HVAs are strictly PROHIBITED from accessing, modifying, or adding notes in the Medication/RX tab.<br><strong>Document ALL MedRec notes in the CCM Call Notes section ONLY.</strong></p></div>'
+      +'<div class="ecw-box"><div class="ecw-label">📋 eCW – CCM Call Notes</div>'
+      +'<div class="ecw-step"><div class="ecw-num">1</div><p>Open patient chart → <strong>CCM Call Notes section</strong></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">2</div><p>Type: <strong>"Patient-Reported Med List – [today\'s date]"</strong></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">3</div><p>Document each medication, dose, and frequency as reported by patient</p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">4</div><p>If any discrepancies or issues → Create a <strong>TE to Ashli</strong> — Subject: <strong>Medication Issue</strong></p></div></div>'
+      +'<div class="section-label">📝 MedRec Notes / Discrepancies (will appear in PDF)</div>'
+      +'<textarea class="notes-field" id="medrec-notes-input" placeholder="Document any medication discrepancies, changes, or concerns here..." oninput="pdfData.medrecNotes=this.value"></textarea>'
+      +'<div class="checklist">'
+      +'<div class="check-item" onclick="toggleCheck(this,\'m6-next\')"><div class="cb"></div><div class="cb-label">Med list documented in CCM Call Notes with today\'s date</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'m6-next\')"><div class="cb"></div><div class="cb-label">Discrepancies documented (or confirmed none)</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'m6-next\')"><div class="cb"></div><div class="cb-label">TE created for medication issues only (if applicable)</div></div></div>';
+  },footer:function(){return'<button class="btn btn-back" onclick="monthlyBack()">← Back</button><button class="btn btn-next" id="m6-next" onclick="monthlyNext()" disabled>→ Monthly Questionnaire</button>';}},
+  // Step 7 - Topic selector
+  {render:function(){
+    var doneHTML='';
+    if(completedTopics.length>0){
+      doneHTML='<div class="completed-topics-bar"><div class="ct-label">✅ Completed This Session</div>'+completedTopics.map(function(t){return'<span class="ct-chip">'+t+'</span>';}).join('')+'</div>';
+    }
+    var topicBtns=topics.map(function(t){
+      var done=completedTopics.indexOf(t.name)>=0;
+      return'<div class="topic-btn" onclick="startQuiz(\''+t.id+'\')" style="'+(done?'opacity:0.6;background:var(--green-light);border-color:var(--green);':'')+'"><div class="t-icon">'+t.icon+'</div><div class="t-name">'+(done?'✅ ':'')+t.name+'</div></div>';
+    }).join('');
+    return '<span class="step-badge badge-monthly">Questionnaire · Step 7 of 11</span><div class="step-title">Monthly Health Questionnaire</div>'
+      +'<div class="info-box"><p>Select the topic most relevant to the patient\'s conditions. If a new issue comes up during questioning, return here to select additional topics. <strong>All completed questionnaires will appear in the PDF.</strong></p></div>'
+      +doneHTML
+      +'<div class="topic-grid">'+topicBtns+'</div>';
+  },footer:function(){
+    var btn=completedTopics.length>0?'<button class="btn btn-next" onclick="monthlyNext()">✓ Done with Questionnaire →</button>':'<button class="btn btn-next" onclick="monthlyNext()">Skip Questionnaire →</button>';
+    return'<button class="btn btn-back" onclick="monthlyBack()">← Back</button>'+btn;
+  }},
+  // Step 8 - Education
+  {render:function(){
+    var lastTopic=completedTopics.length>0?completedTopics[completedTopics.length-1]:'';
+    var doneBar=completedTopics.length>0?'<div class="info-box"><p>✅ Questionnaire complete: <strong>'+completedTopics.join(', ')+'</strong></p></div>':'';
+    return '<span class="step-badge badge-monthly">Education · Step 8 of 11</span><div class="step-title">Send Patient Educational Materials</div>'
+      +doneBar
+      +'<div class="ecw-box"><div class="ecw-label">📋 eCW – Patient Education Steps</div>'
+      +'<div class="ecw-step"><div class="ecw-num">1</div><p>From the Progress Note — double-click <strong>Send</strong></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">2</div><p>Click <strong>"For Patients"</strong> → <strong>"Patient Education"</strong></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">3</div><p>Select materials → <strong>Add to Basket</strong> → <strong>Send to Healow Portal</strong></p></div></div>'
+      +'<div class="section-label">📎 Education File Name (will appear in PDF)</div>'
+      +'<input type="text" class="notes-field" style="min-height:auto;padding:10px;" placeholder="e.g. mm/dd/yyyy_Blood Pressure Tips" id="edu-file-input" oninput="pdfData.educationFile=this.value" value="'+(lastTopic?'_'+lastTopic+' Tips':'')+'"><br><br>'
+      +'<div class="checklist">'
+      +'<div class="check-item" onclick="toggleCheck(this,\'m8-next\')"><div class="cb"></div><div class="cb-label">Topic selected related to chronic condition</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'m8-next\')"><div class="cb"></div><div class="cb-label">Material sent via Healow Portal</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'m8-next\')"><div class="cb"></div><div class="cb-label">File name recorded above</div></div></div>';
+  },footer:function(){
+    return'<button class="btn btn-back" onclick="monthlyStep=6;renderMonthly()">← Back to Topics</button><button class="btn btn-next" id="m8-next" onclick="var ef=document.getElementById(\'edu-file-input\');if(ef)pdfData.educationSent=ef.value||\'Sent\';monthlyNext();" disabled>→ Closing Questions</button>';
+  }},
+  // Step 9 - Closing
+  {render:function(){
+    var refillOpts=[
+      {label:'No refills needed',val:'No refills needed'},
+      {label:'Refill requested — appointment scheduled with Ashli',val:'Refill requested — appointment scheduled with Ashli'},
+      {label:'Refill requested — TE sent to Ashli',val:'Refill requested — TE sent to Ashli'},
+      {label:'Patient will call pharmacy directly',val:'Patient will call pharmacy directly'}
+    ];
+    var refillHTML=refillOpts.map(function(o,i){
+      return'<div class="radio-item" id="refill-opt-'+i+'" onclick="selectRefill(\''+o.val+'\','+i+')">'
+        +'<input type="radio" name="refill" id="rf'+i+'"><label for="rf'+i+'">'+o.label+'</label></div>';
+    }).join('');
+    return '<span class="step-badge badge-monthly">Closing · Step 9 of 11</span><div class="step-title">Closing Questions & Sign Off</div>'
+      +'<div class="script-box"><div class="script-label">📞 Refill Check</div><p>"Do you need any refills before your next visit?"</p></div>'
+      +'<div class="section-label">Refill Status (will appear in PDF)</div>'
+      +'<div class="radio-group">'+refillHTML+'</div>'
+      +'<div class="script-box" style="margin-top:8px;"><div class="script-label">📞 New Specialist Question</div><p>"Are you seeing a New Specialist since your last visit with your Provider?"</p></div>'
+      +'<div class="branch-q">Is the patient seeing a new specialist?</div>'
+      +'<div id="specialist-section" style="display:none;">'
+      +'<div class="specialist-fields">'
+      +'<label>SPECIALIST NAME</label><input type="text" id="spec-name" placeholder="Dr. Last Name, First Name" oninput="pdfData.specialistName=this.value">'
+      +'<label>SPECIALTY</label><input type="text" id="spec-specialty" placeholder="e.g. Cardiology, Nephrology" oninput="pdfData.specialistSpecialty=this.value">'
+      +'<label>TELEPHONE NUMBER</label><input type="text" id="spec-phone" placeholder="(xxx) xxx-xxxx" oninput="pdfData.specialistPhone=this.value">'
+      +'</div></div>'
+      +'<div style="display:flex;gap:8px;margin-bottom:16px;">'
+      +'<button class="btn btn-yes" onclick="pdfData.newSpecialist=true;document.getElementById(\'specialist-section\').style.display=\'block\';">✅ Yes</button>'
+      +'<button class="btn btn-no" onclick="pdfData.newSpecialist=false;document.getElementById(\'specialist-section\').style.display=\'none\';">❌ No</button>'
+      +'</div>'
+      +'<div class="section-label">📝 Patient Concerns / Closing Notes (will appear in PDF)</div>'
+      +'<textarea class="notes-field" id="closing-notes-input" placeholder="Document patient concerns, questions, actions taken, appointments scheduled..." oninput="pdfData.closingNotes=this.value"></textarea>'
+      +'<div class="script-box" style="margin-top:12px;"><div class="script-label">📞 Sign Off</div><p>"If you need any assistance or have any new concerns, please do not hesitate to contact us. As part of your chronic care management, you have 24/7 access to a member of our clinical team."</p></div>';
+  },footer:function(){return'<button class="btn btn-back" onclick="monthlyBack()">← Back</button><button class="btn btn-next" onclick="monthlyNext()">→ Log Time in eCW</button>';}},
+  // Step 10 - Log time
+  {render:function(){
+    return '<span class="step-badge badge-monthly">eCW · Step 10 of 11</span><div class="step-title">Log Billable Minutes in eCW</div>'
+      +'<div class="ecw-box"><div class="ecw-label">📋 eCW – CCM Module</div>'
+      +'<div class="ecw-step"><div class="ecw-num">1</div><p>Open patient chart → <strong>CCM Module</strong></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">2</div><p>Enter <strong>total minutes</strong> for this session</p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">3</div><p>Document activities: call, MedRec, PRISMA review, questionnaire, education</p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">4</div><p>Confirm total <strong>monthly minutes ≥ 20</strong> before saving</p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">5</div><p><strong>Save</strong></p></div></div>'
+      +'<div class="timer-box"><div id="live-timer" class="timer-display">'+getTimerStr()+'</div><div class="timer-label">Session time</div><div id="timer-goal-msg" class="timer-goal" style="color:'+(timerSeconds>=1200?'var(--green)':'var(--red)')+'">'+( timerSeconds>=1200?'✅ 20-minute minimum reached':'⚠️ Below 20-minute minimum')+'</div></div>';
+  },footer:function(){return'<button class="btn btn-back" onclick="monthlyBack()">← Back</button><button class="btn btn-next" id="final-checklist-btn" onclick="stopTimer();monthlyNext();">→ Final Checklist</button>';}},
+  // Step 11 - Final checklist & attestation
+  {render:function(){
+    var now=new Date(),ts=now.toLocaleString(),dateStr=getTodayStr();
+    return '<span class="step-badge badge-monthly">Complete · Step 11 of 11</span><div class="step-title">Final Compliance Checklist & Attestation</div>'
+      +'<div class="checklist" id="final-checklist">'
+      +'<div class="check-item" onclick="toggleCheck(this,\'final-print-btn\')"><div class="cb"></div><div class="cb-label">Timer ran for at least 20 minutes total</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'final-print-btn\')"><div class="cb"></div><div class="cb-label">MedRec completed while patient was on phone</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'final-print-btn\')"><div class="cb"></div><div class="cb-label">MedRec documented in CCM Call Notes — NOT in RX tab</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'final-print-btn\')"><div class="cb"></div><div class="cb-label">Health questionnaire completed</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'final-print-btn\')"><div class="cb"></div><div class="cb-label">Patient education sent via Healow Portal</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'final-print-btn\')"><div class="cb"></div><div class="cb-label">Refill status and closing questions documented</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'final-print-btn\')"><div class="cb"></div><div class="cb-label">Time logged in eCW CCM Module</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'final-print-btn\')"><div class="cb"></div><div class="cb-label">No copy-paste used — all notes are original</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'final-print-btn\')"><div class="cb"></div><div class="cb-label">All escalations documented and acted on</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'final-print-btn\')"><div class="cb"></div><div class="cb-label">Correct calendar month confirmed</div></div></div>'
+      +'<div class="attest-box"><div class="attest-label">✍️ HVA Attestation</div>'
+      +'<p>"I attest that all information documented in this record is accurate, completed in real time, and performed in accordance with SynergyMSO Care Command CCM protocols and CMS billing guidelines."</p>'
+      +'<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:#6a1a8a;display:block;margin-bottom:4px;">HVA PRINTED NAME</label>'
+      +'<input id="hva-name-input" type="text" placeholder="Type your full name here..." style="border:none;border-bottom:2px solid #9a4ab0;width:100%;padding:6px 2px;font-size:14px;background:transparent;outline:none;font-weight:600;" oninput="pdfData.hvaName=this.value"></div>'
+      +'<div style="margin-top:10px;padding:6px 8px;background:#f0e8fa;border-radius:6px;font-size:11px;color:#3a0a5a;">🕐 '+ts+'</div></div>'
+      +'<div style="padding:8px;background:var(--green-light);border-radius:6px;font-size:11px;color:var(--green);font-weight:700;margin-bottom:8px;">Date: '+dateStr+' · Session Time: '+getTimerStr()+'</div>';
+  },footer:function(){
+    return'<button class="btn btn-back" onclick="monthlyBack()">← Back</button>'
+      +'<button class="btn btn-print" id="final-print-btn" onclick="var t=allQuizSessions.map(function(s){return s.topic;});recordCallComplete(timerSeconds,pdfData.medrecStatus,pdfData.escalations,t,!!pdfData.educationSent);printWorkflow(\'monthly\')" disabled>🖨️ Print PDF</button>';
+  }}
+];
+
+function selectRefill(val,idx){
+  pdfData.refillChoice=val;
+  document.querySelectorAll('.radio-item').forEach(function(el){el.classList.remove('selected');});
+  var el=document.getElementById('refill-opt-'+idx);if(el)el.classList.add('selected');
+}
+function showNoAnswer(){
+  recordNoAnswer();
+  document.getElementById('monthly-content').innerHTML='<span class="step-badge badge-monthly">No Answer</span><div class="step-title">Patient Did Not Answer</div>'
+    +'<div class="warn-box"><div class="warn-label">⚠️ No Answer / Voicemail</div>'
+    +'<p>Document in eCW: <em>"Attempted CCM call – no answer. Left voicemail on [date]."</em></p>'
+    +'<p style="margin-top:8px;">Do NOT log call time. You may log time for other billable activities (PRISMA review, care plan updates).</p></div>'
+    +'<div class="info-box"><p>Schedule a follow-up attempt and try again before end of month.</p></div>';
+  document.getElementById('monthly-footer').innerHTML='<button class="btn btn-home btn-full" onclick="goHome()">⌂ Home</button>';
+}
+function showCallback(){
+  recordCallback();
+  document.getElementById('monthly-content').innerHTML='<span class="step-badge badge-monthly">Callback</span><div class="step-title">Schedule Callback</div>'
+    +'<div class="info-box"><p>Ask patient: <em>"When would be a better time to call? I am available [days/times]."</em></p></div>'
+    +'<div class="warn-box"><div class="warn-label">⚠️ Document in eCW</div><p><em>"Patient reached – not a good time. Callback scheduled for [date/time]."</em></p></div>';
+  document.getElementById('monthly-footer').innerHTML='<button class="btn btn-home btn-full" onclick="goHome()">⌂ Home</button>';
+}
+function monthlyNext(){monthlyStep++;renderMonthly();}
+function monthlyBack(){if(monthlyStep>0){monthlyStep--;renderMonthly();setTimeout(updateTimerDisplay,50);}}
+function renderMonthly(){
+  var total=monthlyStepsData.length,cur=monthlyStepsData[monthlyStep];if(!cur)return;
+  document.getElementById('monthly-sub').textContent='Step '+(monthlyStep+1)+' of '+total;
+  document.getElementById('monthly-progress').style.width=(((monthlyStep+1)/total)*100)+'%';
+  document.getElementById('monthly-content').innerHTML=cur.render();
+  document.getElementById('monthly-footer').innerHTML=cur.footer();
+  renderStepNav('monthly-nav',total,monthlyStep,'jumpMonthly');
+  setTimeout(updateTimerDisplay,50);
+}
+
+// ═══ DISENROLLMENT WORKFLOW ═══
+var disenrollStepsData=[
+  {render:function(){
+    return '<span class="step-badge badge-disenroll">Disenrollment · Step 1 of 5</span><div class="step-title">Confirm Reason for Disenrollment</div>'
+      +'<div class="warn-box"><div class="warn-label">⚠️ Common Disenrollment Reasons</div><ul>'
+      +'<li>Patient requested to stop</li><li>Patient no longer meets eligibility</li>'
+      +'<li>Patient deceased</li><li>Patient changed primary care provider</li>'
+      +'<li>Administrative / billing decision</li></ul></div>'
+      +'<div class="info-box"><p>Stopping CCM correctly prevents incorrect billing. Confirm the exact reason before proceeding.</p></div>';
+  },footer:function(){return'<button class="btn btn-home" onclick="goHome()">⌂ Home</button><button class="btn btn-next" onclick="disenrollNext()">✓ Reason Confirmed →</button>';}},
+  {render:function(){
+    return '<span class="step-badge badge-disenroll">eCW Action · Step 2 of 5</span><div class="step-title">Update CCM Module in eCW</div>'
+      +'<div class="ecw-box"><div class="ecw-label">📋 eCW – CCM Module</div>'
+      +'<div class="ecw-step"><div class="ecw-num">1</div><p>Open patient chart → <strong>CCM Module</strong></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">2</div><p>Change status to <strong>"Disenrolled"</strong></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">3</div><p>Set end date to <strong>last day of the current month</strong></p></div></div>'
+      +'<div class="stop-box"><div class="stop-label">🔴 End Date Rule</div><p>Always use the <strong>last day of the current month</strong> — not today\'s date, not a future date.</p></div>';
+  },footer:function(){return'<button class="btn btn-back" onclick="disenrollBack()">← Back</button><button class="btn btn-next" onclick="disenrollNext()">✓ Status Updated →</button>';}},
+  {render:function(){
+    return '<span class="step-badge badge-disenroll">Documentation · Step 3 of 5</span><div class="step-title">Create Telephone Encounter (TE)</div>'
+      +'<div class="ecw-box"><div class="ecw-label">📋 eCW – Create TE</div>'
+      +'<div class="ecw-step"><div class="ecw-num">1</div><p>Create new Telephone Encounter</p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">2</div><p>Use <strong>"Administrative"</strong> as the reason</p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">3</div><p>Type: <em>"Disenrolled effective [last day of month] due to [reason]."</em></p></div>'
+      +'<div class="ecw-step"><div class="ecw-num">4</div><p>Close the TE</p></div></div>';
+  },footer:function(){return'<button class="btn btn-back" onclick="disenrollBack()">← Back</button><button class="btn btn-next" onclick="disenrollNext()">✓ TE Created →</button>';}},
+  {render:function(){
+    return '<span class="step-badge badge-disenroll">Billing · Step 4 of 5</span><div class="step-title">Billing Update Confirmation</div>'
+      +'<div class="info-box"><p><strong>eCW updates billing automatically</strong> when status is changed to Disenrolled.</p></div>'
+      +'<div class="checklist">'
+      +'<div class="check-item" onclick="toggleCheck(this,\'d4-next\')"><div class="cb"></div><div class="cb-label">CCM status changed to Disenrolled in eCW</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'d4-next\')"><div class="cb"></div><div class="cb-label">End date set to last day of current month</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'d4-next\')"><div class="cb"></div><div class="cb-label">TE created with reason documented and closed</div></div></div>';
+  },footer:function(){return'<button class="btn btn-back" onclick="disenrollBack()">← Back</button><button class="btn btn-next" id="d4-next" onclick="disenrollNext()" disabled>✓ All Done →</button>';}},
+  {render:function(){
+    var now=new Date(),ts=now.toLocaleString(),dateStr=getTodayStr();
+    return '<span class="step-badge badge-disenroll">Complete · Step 5 of 5</span><div class="step-title">Disenrollment Complete & HVA Attestation</div>'
+      +'<div class="summary-box"><div class="check-big">✅</div><h3>Disenrollment Complete</h3><p>Patient correctly disenrolled. eCW updated. Billing stopped at end of current month.</p></div>'
+      +'<div class="attest-box"><div class="attest-label">✍️ HVA Attestation</div>'
+      +'<p>"I attest that all information documented in this record is accurate and was performed in accordance with SynergyMSO Care Command CCM protocols and CMS billing guidelines."</p>'
+      +'<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:#6a1a8a;display:block;margin-bottom:4px;">HVA PRINTED NAME</label>'
+      +'<input id="hva-name-input" type="text" placeholder="Type your full name here..." style="border:none;border-bottom:2px solid #9a4ab0;width:100%;padding:6px 2px;font-size:14px;background:transparent;outline:none;font-weight:600;"></div>'
+      +'<div style="margin-top:10px;padding:6px 8px;background:#f0e8fa;border-radius:6px;font-size:11px;color:#3a0a5a;">🕐 '+ts+'</div></div>'
+      +'<div style="padding:8px;background:var(--green-light);border-radius:6px;font-size:11px;color:var(--green);font-weight:700;">Date: '+dateStr+'</div>';
+  },footer:function(){return'<button class="btn btn-back" onclick="disenrollBack()">← Back</button><button class="btn btn-print" onclick="recordDisenrollment();printWorkflow(\'disenroll\')">🖨️ Print PDF</button>';}}
+];
+function disenrollNext(){disenrollStep++;renderDisenroll();}
+function disenrollBack(){if(disenrollStep>0){disenrollStep--;renderDisenroll();}}
+function renderDisenroll(){
+  var total=disenrollStepsData.length,cur=disenrollStepsData[disenrollStep];if(!cur)return;
+  document.getElementById('disenroll-sub').textContent='Step '+(disenrollStep+1)+' of '+total;
+  document.getElementById('disenroll-progress').style.width=(((disenrollStep+1)/total)*100)+'%';
+  document.getElementById('disenroll-content').innerHTML=cur.render();
+  document.getElementById('disenroll-footer').innerHTML=cur.footer();
+  renderStepNav('disenroll-nav',total,disenrollStep,'jumpDisenroll');
+}
+
+// ═══ INIT ═══
+showScreen('screen-home');
+</script>
+</body>
+</html>
