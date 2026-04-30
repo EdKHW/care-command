@@ -844,19 +844,23 @@ function renderEnroll(){
 var monthlyStepsData=[
   // Step 1 - Timer & PRISMA
   {render:function(){
-    return '<span class="step-badge badge-monthly">Start · Step 1 of 11</span><div class="step-title">Start Timer & Pre-Call Chart Review</div>'
-      +'<div class="timer-box"><div id="live-timer" class="timer-display">00:00</div><div class="timer-label">Time elapsed this session</div><div id="timer-goal-msg" class="timer-goal" style="color:var(--yellow);">20 min remaining</div>'
-      +'<div class="timer-controls"><button class="btn btn-yes" onclick="startTimer()">▶ Start</button><button class="btn btn-stop" onclick="resetTimer()">↺ Reset</button></div></div>'
-      +'<div class="prisma-box"><div class="prisma-label">🔵 PRISMA – Review External Records First</div><ul>'
-      +'<li>Click <strong>PRISMA</strong> button in Patient Hub</li>'
-      +'<li>Filter to <strong>External Records</strong></li>'
-      +'<li>Review for: hospital discharges, specialist visit notes</li>'
-      +'<li><strong>Note any new medications</strong> — bring up during call</li>'
-      +'<li><strong>Note any recent hospitalizations</strong> — schedule follow-up with Ashli</li></ul></div>'
-      +'<div class="warn-box"><div class="warn-label">⚠️ Also Review Before Calling</div><ul>'
-      +'<li>Last CCM note and current med list</li>'
-      +'<li>Recent KHW visits or new medications</li>'
-      +'<li>Patient Care Team for specialists</li></ul></div>';
+    return '<span class="step-badge badge-monthly">Start · Step 1 of 11</span><div class="step-title">Pre-Call Chart Review</div>'
+      +'<div class="info-box"><p>Complete all items below before making the call. <strong>Make the Call</strong> button will unlock when all boxes are checked.</p></div>'
+      +'<div class="prisma-box"><div class="prisma-label">🔵 PRISMA – External Records</div></div>'
+      +'<div class="checklist">'
+      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Clicked <strong>PRISMA</strong> button in Patient Hub</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Filtered to <strong>External Records</strong></div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Reviewed for hospital discharges and specialist visit notes</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Noted any <strong>new medications</strong> — flagged to bring up during call</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Noted any <strong>recent hospitalizations</strong> — follow-up scheduled with Ashli if needed</div></div>'
+      +'</div>'
+      +'<div class="warn-box"><div class="warn-label">⚠️ Also Review Before Calling</div></div>'
+      +'<div class="checklist">'
+      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Last CCM note reviewed</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Current med list reviewed</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Recent KHW visits or new medications reviewed</div></div>'
+      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Patient Care Team / specialists reviewed</div></div>'
+      +'</div>';
   },footer:function(){
     return'<button class="btn btn-home" onclick="goHome()">⌂ Home</button><button class="btn btn-next" id="make-call-btn" onclick="pdfData.prismaReviewed=true;monthlyNext();" disabled>→ Make the Call</button>';
   }},
