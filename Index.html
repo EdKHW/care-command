@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -841,25 +842,21 @@ function renderEnroll(){
 
 // ═══ MONTHLY WORKFLOW ═══
 var monthlyStepsData=[
-  // Step 1 - Pre-Call Chart Review
+  // Step 1 - Timer & PRISMA
   {render:function(){
-    return '<span class="step-badge badge-monthly">Start · Step 1 of 11</span><div class="step-title">Pre-Call Chart Review</div>'
-    +'<div class="info-box"><p>Complete all items below before making the call. <strong>&#x2192; Make the Call</strong> will unlock when all boxes are checked.</p></div>'
-      +'<div class="prisma-box"><div class="prisma-label">&#x1F535; PRISMA &#x2013; External Records</div></div>'
-      +'<div class="checklist">'
-      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Clicked <strong>PRISMA</strong> button in Patient Hub</div></div>'
-      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Filtered to <strong>External Records</strong></div></div>'
-      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Reviewed for hospital discharges and specialist visit notes</div></div>'
-      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Noted any <strong>new medications</strong> — flagged to bring up during call</div></div>'
-      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Noted any <strong>recent hospitalizations</strong> — follow-up scheduled with Ashli if needed</div></div>'
-      +'</div>'
-      +'<div class="warn-box"><div class="warn-label">⚠️ Also Review Before Calling</div></div>'
-      +'<div class="checklist">'
-      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Last CCM note reviewed</div></div>'
-      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Current med list reviewed</div></div>'
-      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Recent KHW visits or new medications reviewed</div></div>'
-      +'<div class="check-item" onclick="toggleCheck(this,\'make-call-btn\')"><div class="cb"></div><div class="cb-label">Patient Care Team / specialists reviewed</div></div>'
-      +'</div>';
+    return '<span class="step-badge badge-monthly">Start · Step 1 of 11</span><div class="step-title">Start Timer & Pre-Call Chart Review</div>'
+      +'<div class="timer-box"><div id="live-timer" class="timer-display">00:00</div><div class="timer-label">Time elapsed this session</div><div id="timer-goal-msg" class="timer-goal" style="color:var(--yellow);">20 min remaining</div>'
+      +'<div class="timer-controls"><button class="btn btn-yes" onclick="startTimer()">▶ Start</button><button class="btn btn-stop" onclick="resetTimer()">↺ Reset</button></div></div>'
+      +'<div class="prisma-box"><div class="prisma-label">🔵 PRISMA – Review External Records First</div><ul>'
+      +'<li>Click <strong>PRISMA</strong> button in Patient Hub</li>'
+      +'<li>Filter to <strong>External Records</strong></li>'
+      +'<li>Review for: hospital discharges, specialist visit notes</li>'
+      +'<li><strong>Note any new medications</strong> — bring up during call</li>'
+      +'<li><strong>Note any recent hospitalizations</strong> — schedule follow-up with Ashli</li></ul></div>'
+      +'<div class="warn-box"><div class="warn-label">⚠️ Also Review Before Calling</div><ul>'
+      +'<li>Last CCM note and current med list</li>'
+      +'<li>Recent KHW visits or new medications</li>'
+      +'<li>Patient Care Team for specialists</li></ul></div>';
   },footer:function(){
     return'<button class="btn btn-home" onclick="goHome()">⌂ Home</button><button class="btn btn-next" id="make-call-btn" onclick="pdfData.prismaReviewed=true;monthlyNext();" disabled>→ Make the Call</button>';
   }},
@@ -952,7 +949,7 @@ var monthlyStepsData=[
       +'<div class="ecw-step"><div class="ecw-num">1</div><p>From the Progress Note — double-click <strong>Send</strong></p></div>'
       +'<div class="ecw-step"><div class="ecw-num">2</div><p>Click <strong>"For Patients"</strong> → <strong>"Patient Education"</strong></p></div>'
       +'<div class="ecw-step"><div class="ecw-num">3</div><p>Select materials → <strong>Add to Basket</strong> → <strong>Send to Healow Portal</strong></p></div></div>'
-      <div class="section-label">📎 Education File Name
+      +'<div class="section-label" style="color:var(--blue);font-size:12px;font-weight:800;">📎 EDUCATION FILE NAME (WILL APPEAR IN PDF)</div>'
       +'<input type="text" class="notes-field" style="min-height:auto;padding:10px;" placeholder="e.g. mm/dd/yyyy_Blood Pressure Tips" id="edu-file-input" oninput="pdfData.educationFile=this.value" value="'+(lastTopic?'_'+lastTopic+' Tips':'')+'"><br><br>'
       +'<div class="checklist">'
       +'<div class="check-item" onclick="toggleCheck(this,\'m8-next\')"><div class="cb"></div><div class="cb-label">Topic selected related to chronic condition</div></div>'
@@ -989,7 +986,7 @@ var monthlyStepsData=[
       +'<button class="btn btn-yes" onclick="pdfData.newSpecialist=true;document.getElementById(\'specialist-section\').style.display=\'block\';">✅ Yes</button>'
       +'<button class="btn btn-no" onclick="pdfData.newSpecialist=false;document.getElementById(\'specialist-section\').style.display=\'none\';">❌ No</button>'
       +'</div>'
-      +'<div class="section-label" style="color:var(--blue);font-size:12px;">📝 PATIENT CONCERNS / CLOSING NOTES (WILL APPEAR IN PDF)</div>'
+      +'<div class="section-label" style="color:var(--blue);font-size:12px;font-weight:800;">📝 PATIENT CONCERNS / CLOSING NOTES (WILL APPEAR IN PDF)</div>'
       +'<textarea class="notes-field" id="closing-notes-input" placeholder="Document patient concerns, questions, actions taken, appointments scheduled..." oninput="pdfData.closingNotes=this.value"></textarea>'
       +'<div class="script-box" style="margin-top:12px;"><div class="script-label">📞 Sign Off</div><p>"If you need any assistance or have any new concerns, please do not hesitate to contact us. As part of your chronic care management, you have 24/7 access to a member of our clinical team."</p></div>';
   },footer:function(){return'<button class="btn btn-back" onclick="monthlyBack()">← Back</button><button class="btn btn-next" onclick="monthlyNext()">→ Log Time in eCW</button>';}},
@@ -1002,14 +999,14 @@ var monthlyStepsData=[
       +'<div class="ecw-step"><div class="ecw-num">3</div><p>Document activities: call, MedRec, PRISMA review, questionnaire, education</p></div>'
       +'<div class="ecw-step"><div class="ecw-num">4</div><p>Confirm total <strong>monthly minutes ≥ 20</strong> before saving</p></div>'
       +'<div class="ecw-step"><div class="ecw-num">5</div><p><strong>Save</strong></p></div></div>'
-     '';
+      '';
   },footer:function(){return'<button class="btn btn-back" onclick="monthlyBack()">← Back</button><button class="btn btn-next" id="final-checklist-btn" onclick="stopTimer();monthlyNext();">→ Final Checklist</button>';}},
   // Step 11 - Final checklist & attestation
   {render:function(){
     var now=new Date(),ts=now.toLocaleString(),dateStr=getTodayStr();
     return '<span class="step-badge badge-monthly">Complete · Step 11 of 11</span><div class="step-title">Final Compliance Checklist & Attestation</div>'
       +'<div class="checklist" id="final-checklist">'
-      ''
+      
       +'<div class="check-item" onclick="toggleCheck(this,\'final-print-btn\')"><div class="cb"></div><div class="cb-label">MedRec completed while patient was on phone</div></div>'
       +'<div class="check-item" onclick="toggleCheck(this,\'final-print-btn\')"><div class="cb"></div><div class="cb-label">MedRec documented in CCM Call Notes — NOT in RX tab</div></div>'
       +'<div class="check-item" onclick="toggleCheck(this,\'final-print-btn\')"><div class="cb"></div><div class="cb-label">Health questionnaire completed</div></div>'
@@ -1042,7 +1039,7 @@ function showNoAnswer(){
   var fileName='CCM_Call_NS_'+dateStr;
   document.getElementById('monthly-content').innerHTML='<span class="step-badge badge-monthly">No Answer</span><div class="step-title">Patient Did Not Answer</div>'
     +'<div class="warn-box"><div class="warn-label">⚠️ No Answer / Voicemail</div>'
-    +'<p>Document in eCW: <em>"Attempted CCM call – no answer. Left voicemail on '+dateStr+'."</em></p>'
+    +'<p>Document in eCW: <em>"Attempted CCM call - no answer. Left voicemail on '+dateStr+'."</em></p>'
     +'<p style="margin-top:8px;">Do NOT log call time. You may log time for other billable activities (PRISMA review, care plan updates).</p></div>'
     +'<div class="info-box"><p>Schedule a follow-up attempt and try again before end of month.</p></div>'
     +'<div class="doc-box"><div class="doc-label">📄 Save PDF As</div>'
@@ -1051,21 +1048,19 @@ function showNoAnswer(){
     +'<p>"I attest that a CCM call attempt was made on '+dateStr+' and the patient did not answer."</p>'
     +'<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:#6a1a8a;display:block;margin-bottom:4px;">HVA PRINTED NAME</label>'
     +'<input id="hva-name-input" type="text" placeholder="Type your full name here..." style="border:none;border-bottom:2px solid #9a4ab0;width:100%;padding:6px 2px;font-size:14px;background:transparent;outline:none;font-weight:600;"></div>'
-    +'<div style="margin-top:10px;padding:6px 8px;background:#f0e8fa;border-radius:6px;font-size:11px;color:#3a0a5a;">🕐 '+new Date().toLocaleString()+'</div></div>';
-  document.getElementById('monthly-footer').innerHTML='<button class="btn btn-home" onclick="goHome()">⌂ Home</button><button class="btn btn-print" onclick="printWorkflow(\'monthly\')">🖨️ Print PDF</button>';
+    +'<div style="margin-top:10px;padding:6px 8px;background:#f0e8fa;border-radius:6px;font-size:11px;color:#3a0a5a;">Timestamp: '+new Date().toLocaleString()+'</div></div>';
+  document.getElementById('monthly-footer').innerHTML='<button class="btn btn-home" onclick="goHome()">Home</button><button class="btn btn-print" onclick="printWorkflow(\'monthly\')">Print PDF</button>';
 }
 function showCallback(){
   recordCallback();
   var dateStr=getTodayStr();
-  var fileName='CCM_Call_NS_'+dateStr.replace(/\//g,'.');
+  var fileName='CCM_Call_NS_'+dateStr;
   document.getElementById('monthly-content').innerHTML='<span class="step-badge badge-monthly">Callback</span><div class="step-title">Schedule Callback</div>'
-    +'<div class="script-box"><div class="script-label">📞 Script</div><p>"When would be a better time to call? I am available [days/times]."</p></div>'
-    +'<div class="checklist">'
-    +'<div class="check-item" onclick="toggleCheck(this,\'cb-print-btn\')"><div class="cb"></div><div class="cb-label">Patient reached — not a good time to talk</div></div>'
-    +'</div>'
-    +'<div style="margin-bottom:16px;"><label style="font-size:11px;font-weight:700;color:var(--blue);display:block;margin-bottom:4px;">📅 CALLBACK DATE & TIME</label>'
+    +'<div class="script-box"><div class="script-label">Script</div><p>"When would be a better time to call? I am available [days/times]."</p></div>'
+    +'<div class="checklist"><div class="check-item" onclick="toggleCheck(this,\'cb-print-btn\')"><div class="cb"></div><div class="cb-label">Patient reached — not a good time to talk</div></div></div>'
+    +'<div style="margin-bottom:16px;"><label style="font-size:11px;font-weight:700;color:var(--blue);display:block;margin-bottom:4px;">CALLBACK DATE AND TIME</label>'
     +'<input id="cb-datetime" type="text" placeholder="e.g. 05/01/2026 at 2:00 PM" class="notes-field" style="min-height:auto;padding:10px;"></div>'
-    +'<div style="margin-bottom:16px;"><label style="font-size:11px;font-weight:700;color:var(--blue);display:block;margin-bottom:4px;">📝 NOTES</label>'
+    +'<div style="margin-bottom:16px;"><label style="font-size:11px;font-weight:700;color:var(--blue);display:block;margin-bottom:4px;">NOTES</label>'
     +'<textarea id="cb-notes" class="notes-field" placeholder="Any additional notes..."></textarea></div>'
     +'<div class="doc-box"><div class="doc-label">📄 Save PDF As</div>'
     +'<p style="font-size:15px;font-weight:800;color:var(--blue);">'+fileName+'</p></div>'
@@ -1073,8 +1068,8 @@ function showCallback(){
     +'<p>"I attest that the patient was reached on '+dateStr+' but was unavailable. Callback has been scheduled."</p>'
     +'<div style="margin-bottom:10px;"><label style="font-size:11px;font-weight:700;color:#6a1a8a;display:block;margin-bottom:4px;">HVA PRINTED NAME</label>'
     +'<input id="hva-name-input" type="text" placeholder="Type your full name here..." style="border:none;border-bottom:2px solid #9a4ab0;width:100%;padding:6px 2px;font-size:14px;background:transparent;outline:none;font-weight:600;"></div>'
-    +'<div style="margin-top:10px;padding:6px 8px;background:#f0e8fa;border-radius:6px;font-size:11px;color:#3a0a5a;">🕐 '+new Date().toLocaleString()+'</div></div>';
-  document.getElementById('monthly-footer').innerHTML='<button class="btn btn-home" onclick="goHome()">⌂ Home</button><button class="btn btn-print" id="cb-print-btn" onclick="printWorkflow(\'monthly\')" disabled>🖨️ Print PDF</button>';
+    +'<div style="margin-top:10px;padding:6px 8px;background:#f0e8fa;border-radius:6px;font-size:11px;color:#3a0a5a;">Timestamp: '+new Date().toLocaleString()+'</div></div>';
+  document.getElementById('monthly-footer').innerHTML='<button class="btn btn-home" onclick="goHome()">Home</button><button class="btn btn-print" id="cb-print-btn" onclick="printWorkflow(\'monthly\')" disabled>Print PDF</button>';
 }
 function monthlyNext(){monthlyStep++;renderMonthly();}
 function monthlyBack(){if(monthlyStep>0){monthlyStep--;renderMonthly();setTimeout(updateTimerDisplay,50);}}
